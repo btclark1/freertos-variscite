@@ -97,11 +97,14 @@ static void app_task(void *param)
         memcpy(app_buf, rx_buf, len);
         app_buf[len] = 0; /* End string by '\0' */
 
+     /* BTC - Remove printf's for throughput testing */
+        /*
         if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
             PRINTF("Get New Line From Master Side\r\n");
         else
             PRINTF("Get Message From Master Side : \"%s\" [len : %d]\r\n", app_buf, len);
-
+        */
+        
         /* Get tx buffer from RPMsg */
         tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
         assert(tx_buf);
