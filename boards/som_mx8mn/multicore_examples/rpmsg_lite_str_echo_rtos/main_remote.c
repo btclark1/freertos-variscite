@@ -99,6 +99,7 @@ static void app_task(void *param)
 
      /* BTC - Remove printf's for throughput testing */
         
+        
         if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
             PRINTF("Get New Line From Master Side\r\n");
         else
