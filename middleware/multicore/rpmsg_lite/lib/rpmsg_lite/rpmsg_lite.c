@@ -93,6 +93,10 @@ struct virtqueue_ops
 /* Buffer is formed by payload and struct rpmsg_std_hdr */
 #define RL_BUFFER_SIZE (RL_BUFFER_PAYLOAD_SIZE + 16UL)
 
+
+
+test code
+
 #if (!RL_BUFFER_SIZE) || (RL_BUFFER_SIZE & (RL_BUFFER_SIZE - 1))
 #error \
     "RL_BUFFER_SIZE must be power of two (256, 512, ...)"\
