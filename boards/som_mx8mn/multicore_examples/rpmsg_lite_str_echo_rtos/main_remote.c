@@ -33,7 +33,7 @@
 #endif
 
 /* Globals */
-static char app_buf[2032]; /* Each RPMSG buffer can carry less than 2032 ( orig was 512 ) payload */
+static char app_buf[2048]; /* Each RPMSG buffer can carry less than 2048 ( orig was 512 ) payload */
 
 /*******************************************************************************
  * Prototypes
