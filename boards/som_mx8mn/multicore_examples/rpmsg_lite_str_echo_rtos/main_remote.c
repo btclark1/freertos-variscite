@@ -107,6 +107,10 @@ static void app_task(void *param)
 
         /* Get tx buffer from RPMsg */
         tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
+        
+        /* print out size... which is not used */
+        PRINTF("rpmsg_lite_alloc_tx_buffer set size to : %d  " \r\n", size);
+        
         assert(tx_buf);
         /* Copy string to RPMsg tx buffer */
         memcpy(tx_buf, app_buf, len);
