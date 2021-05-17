@@ -98,13 +98,20 @@ int main(void)
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
 #endif /* MCMGR_USED */
 
+   PRINTF("\r\nRPMSG ... Before  rpmsg_lite_is_link_up...\r\n");
+
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
         ;
 
-    my_queue = rpmsg_queue_create(my_rpmsg);
-    my_ept   = rpmsg_lite_create_ept(my_rpmsg, LOCAL_EPT_ADDR, rpmsg_queue_rx_cb, my_queue);
-    (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
+   PRINTF("\r\nRPMSG ... After  rpmsg_lite_is_link_up...\r\n");
 
+    my_queue = rpmsg_queue_create(my_rpmsg);
+   PRINTF("\r\nRPMSG ... After  rpmsg_queue_create...\r\n");
+    my_ept   = rpmsg_lite_create_ept(my_rpmsg, LOCAL_EPT_ADDR, rpmsg_queue_rx_cb, my_queue);
+   PRINTF("\r\nRPMSG ... After  rpmsg_lite_create_ept...\r\n");
+    (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
+  PRINTF("\r\nRPMSG ... After  rpmsg_ns_announce...\r\n");
+ 
     PRINTF("\r\nNameservice sent, ready for incoming messages...\r\n");
 
     for (;;)
