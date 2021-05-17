@@ -16,7 +16,8 @@
 #include "clock_config.h"
 #include "board.h"
 #include "fsl_debug_console.h"
-
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "fsl_uart.h"
 #include "rsc_table.h"
@@ -32,7 +33,7 @@
 #endif
 
 /* Globals */
-static char app_buf[512]; /* Each RPMSG buffer can carry less than 512 payload */
+static char app_buf[2032]; /* Each RPMSG buffer can carry less than 2032 ( orig was 512 ) payload */
 
 /*******************************************************************************
  * Prototypes
@@ -41,16 +42,10 @@ static char app_buf[512]; /* Each RPMSG buffer can carry less than 512 payload *
 /*******************************************************************************
  * Code
  ******************************************************************************/
+static TaskHandle_t app_task_handle = NULL;
 
-
-
-
-/*!
- * @brief Main function
- */
-int main(void)
+static void app_task(void *param)
 {
-
     volatile uint32_t remote_addr;
     struct rpmsg_lite_endpoint *volatile my_ept;
     volatile rpmsg_queue_handle my_queue;
@@ -61,28 +56,8 @@ int main(void)
     void *tx_buf;
     uint32_t size;
 
-    /* Initialize standard SDK demo application pins */
-    /* M7 has its local cache and enabled by default,
-     * need to set smart subsystems (0x28000000 ~ 0x3FFFFFFF)
-     * non-cacheable before accessing this address region */
-    BOARD_InitMemory();
-
-    /* Board specific RDC settings */
-    BOARD_RdcInit();
-
-    BOARD_InitBootPins();
-    BOARD_BootClockRUN();
-    BOARD_InitDebugConsole();
-
-    copyResourceTable();
-
-#ifdef MCMGR_USED
-    /* Initialize MCMGR before calling its API */
-    (void)MCMGR_Init();
-#endif /* MCMGR_USED */
-
-   /* Print the initial banner */
-    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...Bare Metal - by BTC...\r\n");
+    /* Print the initial banner */
+    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...\r\n");
 
 #ifdef MCMGR_USED
     uint32_t startupData;
@@ -98,20 +73,13 @@ int main(void)
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
 #endif /* MCMGR_USED */
 
-   PRINTF("\r\nRPMSG ... Before  rpmsg_lite_is_link_up...\r\n");
-
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
         ;
 
-   PRINTF("\r\nRPMSG ... After  rpmsg_lite_is_link_up...\r\n");
-
     my_queue = rpmsg_queue_create(my_rpmsg);
-   PRINTF("\r\nRPMSG ... After  rpmsg_queue_create...\r\n");
     my_ept   = rpmsg_lite_create_ept(my_rpmsg, LOCAL_EPT_ADDR, rpmsg_queue_rx_cb, my_queue);
-   PRINTF("\r\nRPMSG ... After  rpmsg_lite_create_ept...\r\n");
     (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
-  PRINTF("\r\nRPMSG ... After  rpmsg_ns_announce...\r\n");
- 
+
     PRINTF("\r\nNameservice sent, ready for incoming messages...\r\n");
 
     for (;;)
@@ -132,9 +100,9 @@ int main(void)
         /* BTC Remove printfs so they are not included in throughput test */
         
         if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
-            PRINTF("Get New Line From Master Side...BM \r\n");
+            PRINTF("Get New Line From Master Side...BTC \r\n");
         else
-            PRINTF("Get Message From Master Side...BM  : \"%s\" [len : %d]\r\n", app_buf, len);
+            PRINTF("Get Message From Master Side...BTC  : \"%s\" [len : %d]\r\n", app_buf, len);
         
 
         /* Get tx buffer from RPMsg */
@@ -155,4 +123,43 @@ int main(void)
             assert(false);
         }
     }
+}
+
+/*!
+ * @brief Main function
+ */
+int main(void)
+{
+    /* Initialize standard SDK demo application pins */
+    /* M7 has its local cache and enabled by default,
+     * need to set smart subsystems (0x28000000 ~ 0x3FFFFFFF)
+     * non-cacheable before accessing this address region */
+    BOARD_InitMemory();
+
+    /* Board specific RDC settings */
+    BOARD_RdcInit();
+
+    BOARD_InitBootPins();
+    BOARD_BootClockRUN();
+    BOARD_InitDebugConsole();
+
+    copyResourceTable();
+
+#ifdef MCMGR_USED
+    /* Initialize MCMGR before calling its API */
+    (void)MCMGR_Init();
+#endif /* MCMGR_USED */
+
+    if (xTaskCreate(app_task, "APP_TASK", APP_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &app_task_handle) != pdPASS)
+    {
+        PRINTF("\r\nFailed to create application task\r\n");
+        for (;;)
+            ;
+    }
+
+    vTaskStartScheduler();
+
+    PRINTF("Failed to start FreeRTOS on core0.\n");
+    for (;;)
+        ;
 }
