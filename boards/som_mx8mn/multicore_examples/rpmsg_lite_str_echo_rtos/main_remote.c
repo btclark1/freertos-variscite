@@ -16,8 +16,7 @@
 #include "clock_config.h"
 #include "board.h"
 #include "fsl_debug_console.h"
-#include "FreeRTOS.h"
-#include "task.h"
+
 
 #include "fsl_uart.h"
 #include "rsc_table.h"
@@ -42,10 +41,16 @@ static char app_buf[512]; /* Each RPMSG buffer can carry less than 512 payload *
 /*******************************************************************************
  * Code
  ******************************************************************************/
-static TaskHandle_t app_task_handle = NULL;
 
-static void app_task(void *param)
+
+
+
+/*!
+ * @brief Main function
+ */
+int main(void)
 {
+
     volatile uint32_t remote_addr;
     struct rpmsg_lite_endpoint *volatile my_ept;
     volatile rpmsg_queue_handle my_queue;
@@ -56,8 +61,28 @@ static void app_task(void *param)
     void *tx_buf;
     uint32_t size;
 
-    /* Print the initial banner */
-    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...\r\n");
+    /* Initialize standard SDK demo application pins */
+    /* M7 has its local cache and enabled by default,
+     * need to set smart subsystems (0x28000000 ~ 0x3FFFFFFF)
+     * non-cacheable before accessing this address region */
+    BOARD_InitMemory();
+
+    /* Board specific RDC settings */
+    BOARD_RdcInit();
+
+    BOARD_InitBootPins();
+    BOARD_BootClockRUN();
+    BOARD_InitDebugConsole();
+
+    copyResourceTable();
+
+#ifdef MCMGR_USED
+    /* Initialize MCMGR before calling its API */
+    (void)MCMGR_Init();
+#endif /* MCMGR_USED */
+
+   /* Print the initial banner */
+    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...Bare Metal - by BTC...\r\n");
 
 #ifdef MCMGR_USED
     uint32_t startupData;
@@ -97,15 +122,14 @@ static void app_task(void *param)
         memcpy(app_buf, rx_buf, len);
         app_buf[len] = 0; /* End string by '\0' */
 
-     /* BTC - Remove printf's for throughput testing */
-        
+        /* BTC Remove printfs so they are not included in throughput test */
         
         if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
-            PRINTF("Get New Line From Master Side\r\n");
+            PRINTF("Get New Line From Master Side...BM \r\n");
         else
-            PRINTF("Get Message From Master Side : \"%s\" [len : %d]\r\n", app_buf, len);
+            PRINTF("Get Message From Master Side...BM  : \"%s\" [len : %d]\r\n", app_buf, len);
         
-        
+
         /* Get tx buffer from RPMsg */
         tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
         assert(tx_buf);
@@ -124,43 +148,4 @@ static void app_task(void *param)
             assert(false);
         }
     }
-}
-
-/*!
- * @brief Main function
- */
-int main(void)
-{
-    /* Initialize standard SDK demo application pins */
-    /* M7 has its local cache and enabled by default,
-     * need to set smart subsystems (0x28000000 ~ 0x3FFFFFFF)
-     * non-cacheable before accessing this address region */
-    BOARD_InitMemory();
-
-    /* Board specific RDC settings */
-    BOARD_RdcInit();
-
-    BOARD_InitBootPins();
-    BOARD_BootClockRUN();
-    BOARD_InitDebugConsole();
-
-    copyResourceTable();
-
-#ifdef MCMGR_USED
-    /* Initialize MCMGR before calling its API */
-    (void)MCMGR_Init();
-#endif /* MCMGR_USED */
-
-    if (xTaskCreate(app_task, "APP_TASK", APP_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &app_task_handle) != pdPASS)
-    {
-        PRINTF("\r\nFailed to create application task\r\n");
-        for (;;)
-            ;
-    }
-
-    vTaskStartScheduler();
-
-    PRINTF("Failed to start FreeRTOS on core0.\n");
-    for (;;)
-        ;
 }
