@@ -33,7 +33,8 @@
 #endif
 
 /* Globals */
-static char app_buf[2048]; /* Each RPMSG buffer can carry less than 2048 ( orig was 512 ) payload */
+/* BTC Orig -  app_buf[512]
+static char app_buf[8192]; /* Each RPMSG buffer can carry less than 2048 ( orig was 512 ) payload */
 
 /*******************************************************************************
  * Prototypes
