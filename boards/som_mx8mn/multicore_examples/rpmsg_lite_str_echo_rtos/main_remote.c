@@ -34,7 +34,7 @@
 
 /* Globals */
 /* BTC Orig -  app_buf[512] */
-static char app_buf[8192]; /* Each RPMSG buffer can carry less than 2048 ( orig was 512 ) payload */
+static char app_buf[16384]; /* Each RPMSG buffer can carry less than 2048 ( orig was 512 ) payload */
 
 /*******************************************************************************
  * Prototypes
@@ -96,15 +96,20 @@ static void app_task(void *param)
         /* Copy string from RPMsg rx buffer */
         assert(len < sizeof(app_buf));
         memcpy(app_buf, rx_buf, len);
+
+        /* BTC - print app_buf before its cleared when len is 0  */
+        if(len == 0)
+           PRINTF("Get Message From Master Side...len is 0 .. BTC  : \"%s\" [len : %d]\r\n", app_buf, len);
+
         app_buf[len] = 0; /* End string by '\0' */
 
         /* BTC Remove printfs so they are not included in throughput test */
-        /*
+        
         if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
             PRINTF("Get New Line From Master Side...BTC \r\n");
         else
             PRINTF("Get Message From Master Side...BTC  : \"%s\" [len : %d]\r\n", app_buf, len);
-        */
+        
 
         /* Get tx buffer from RPMsg */
         tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
