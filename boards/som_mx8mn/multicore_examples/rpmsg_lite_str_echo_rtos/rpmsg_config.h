@@ -37,7 +37,8 @@
 //!
 //! Number of the buffers, it must be power of two (2, 4, ...).
 //! The default value is 2U.
-#define RL_BUFFER_COUNT (256U)
+// BTC Orig #define RL_BUFFER_COUNT (256U)
+#define RL_BUFFER_COUNT (16U)
 
 //! @def RL_API_HAS_ZEROCOPY
 //!
