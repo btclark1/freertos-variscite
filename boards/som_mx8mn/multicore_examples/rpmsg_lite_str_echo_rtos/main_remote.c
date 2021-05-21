@@ -90,6 +90,7 @@ static void app_task(void *param)
             rpmsg_queue_recv_nocopy(my_rpmsg, my_queue, (uint32_t *)&remote_addr, (char **)&rx_buf, &len, RL_BLOCK);
         if (result != 0)
         {
+            PRINTF("\nrpmsg_queue_recv_nocopy Failed??... \r\n\n");
             assert(false);
         }
 
@@ -113,6 +114,7 @@ static void app_task(void *param)
 
         /* Get tx buffer from RPMsg */
         tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
+        PRINTF("\nrpmsg_lite_alloc_tx_buffer, size is = %d, RL_BLOCK = %d \r\n\n", size, RL_BLOCK);
         
         assert(tx_buf);
         /* Copy string to RPMsg tx buffer */
@@ -121,12 +123,14 @@ static void app_task(void *param)
         result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, tx_buf, len);
         if (result != 0)
         {
+            PRINTF("\nrpmsg_lite_send_nocopy Failed??... \r\n\n");
             assert(false);
         }
         /* Release held RPMsg rx buffer */
         result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
         if (result != 0)
         {
+            PRINTF("\rpmsg_queue_nocopy_free Failed??... \r\n\n");
             assert(false);
         }
     }
