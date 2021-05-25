@@ -107,7 +107,7 @@ int main(void)
    PRINTF("\r\nRPMSG ... Before  rpmsg_lite_is_link_up... \r\n");
 
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
-        NOP;
+        ;
 
    PRINTF("\r\nRPMSG ... After  rpmsg_lite_is_link_up...\r\n");
 
