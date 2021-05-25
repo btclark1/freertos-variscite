@@ -22,9 +22,9 @@ SET(EXECUTABLE_OUTPUT_PATH ${ProjDirPath}/${CMAKE_BUILD_TYPE})
 SET(LIBRARY_OUTPUT_PATH ${ProjDirPath}/${CMAKE_BUILD_TYPE})
 
 
-project(rpmsg_lite_str_echo_rtos_imxcm7)
+project(rpmsg_lite_str_echo_bm_imxcm7)
 
-set(MCUX_SDK_PROJECT_NAME rpmsg_lite_str_echo_rtos_imxcm7.elf)
+set(MCUX_SDK_PROJECT_NAME rpmsg_lite_str_echo_bm_imxcm7.elf)
 
 include(${ProjDirPath}/flags.cmake)
 
@@ -125,5 +125,5 @@ target_link_libraries(${MCUX_SDK_PROJECT_NAME} PRIVATE nosys)
 TARGET_LINK_LIBRARIES(${MCUX_SDK_PROJECT_NAME} PRIVATE -Wl,--end-group)
 
 ADD_CUSTOM_COMMAND(TARGET ${MCUX_SDK_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
--Obinary ${EXECUTABLE_OUTPUT_PATH}/${MCUX_SDK_PROJECT_NAME} ${EXECUTABLE_OUTPUT_PATH}/rpmsg_lite_str_echo_rtos.bin)
+-Obinary ${EXECUTABLE_OUTPUT_PATH}/${MCUX_SDK_PROJECT_NAME} ${EXECUTABLE_OUTPUT_PATH}/rpmsg_lite_str_echo_bm.bin)
 
