@@ -1,158 +1,206 @@
 /*
- * Copyright (c) 2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2017 NXP
+ * Copyright (c) 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
- * SPDX-License-Identifier: BSD-3-Clause
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * o Redistributions of source code must retain the above copyright notice, this list
+ *   of conditions and the following disclaimer.
+ *
+ * o Redistributions in binary form must reproduce the above copyright notice, this
+ *   list of conditions and the following disclaimer in the documentation and/or
+ *   other materials provided with the distribution.
+ *
+ * o Neither the name of Freescale Semiconductor, Inc. nor the names of its
+ *   contributors may be used to endorse or promote products derived from this
+ *   software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "rpmsg_lite.h"
-#include "rpmsg_queue.h"
-#include "rpmsg_ns.h"
-#include "pin_mux.h"
-#include "clock_config.h"
+#include "rpmsg/rpmsg_ext.h"
+#include "string.h"
+#include "assert.h"
 #include "board.h"
-#include "fsl_debug_console.h"
+#include "mu_imx.h"
+#include "debug_console_imx.h"
 
+/*
+ * APP decided interrupt priority
+ */
+#define APP_MU_IRQ_PRIORITY 3
 
-#include "fsl_uart.h"
-#include "rsc_table.h"
-/*******************************************************************************
- * Definitions
- ******************************************************************************/
-#define RPMSG_LITE_SHMEM_BASE         (VDEV0_VRING_BASE)
-#define RPMSG_LITE_LINK_ID            (RL_PLATFORM_IMX8MN_M7_USER_LINK_ID)
-#define RPMSG_LITE_NS_ANNOUNCE_STRING "rpmsg-virtual-tty-channel-1"
-#define APP_TASK_STACK_SIZE (256)
-#ifndef LOCAL_EPT_ADDR
-#define LOCAL_EPT_ADDR (30)
-#endif
+/*
+ * For the most worst case, master will send 3 consecutive messages which remote
+ * do not process.
+ * The synchronization between remote and master is that each time endpoint callback
+ * is called, the MU Receive interrupt is temperorily disabled. Until the next time
+ * remote consumes the message, the interrupt will not be enabled again.
+ * When the interrupt is not enabled, Master can not send the notify, it will blocks
+ * there and can not send further message.
+ * In the worst case, master send the first message, it triggles the ISR in remote
+ * side, remote ISR clear the MU status bit so master can send the second message
+ * and notify again, master can continue to send the 3rd message but will blocks
+ * when trying to notify. Meanwhile, remote side is still in the first ISR which
+ * has a loop to receive all the 3 messages.
+ * Master is blocked and can not send the 4th message, remote side ISR stores all
+ * this 3 messages to app buffer and informs the app layer to consume them. After
+ * 3 messages are consumed, the ISR is enabled again and the second notify is received.
+ * This unblocks the master to complete the 3rd notify and send the 4th message.
+ * The situation goes on and we can see application layer need a maximum size 3
+ * buffer to hold the unconsumed messages. STRING_BUFFER_CNT is therefore set to 3
+ */
+#define STRING_BUFFER_CNT 3
+
+typedef struct
+{
+    unsigned long src;
+    void* data;
+    int len;
+} app_message_t;
 
 /* Globals */
-static char app_buf[8192]; /* Each RPMSG buffer can carry less than 512 payload */
+static struct rpmsg_channel *app_chnl = NULL;
+static app_message_t app_msg[STRING_BUFFER_CNT];
+static char app_buf[512]; /* Each RPMSG buffer can carry less than 512 payload */
+static uint8_t app_idx = 0;
+static uint8_t handler_idx = 0;
+static volatile int32_t msg_count = 0;
 
-/*******************************************************************************
- * Prototypes
- ******************************************************************************/
+static void rpmsg_enable_rx_int(bool enable)
+{
+    if (enable)
+    {
+        if ((--msg_count) == 0)
+            MU_EnableRxFullInt(MUB, RPMSG_MU_CHANNEL);
+    }
+    else
+    {
+        if ((msg_count++) == 0)
+            MU_DisableRxFullInt(MUB, RPMSG_MU_CHANNEL);
+    }
+}
 
-/*******************************************************************************
- * Code
- ******************************************************************************/
+static void rpmsg_read_cb(struct rpmsg_channel *rp_chnl, void *data, int len,
+                void * priv, unsigned long src)
+{
+    /*
+     * Temperorily Disable MU Receive Interrupt to avoid master
+     * sending too many messages and remote will fail to keep pace
+     * to consume (flow control)
+     */
+    rpmsg_enable_rx_int(false);
 
+    /* Hold the RPMsg rx buffer to be used in main loop */
+    rpmsg_hold_rx_buffer(rp_chnl, data);
+    app_msg[handler_idx].src = src;
+    app_msg[handler_idx].data = data;
+    app_msg[handler_idx].len = len;
 
+    /* Move to next free message index */
+    handler_idx = (handler_idx + 1) % STRING_BUFFER_CNT;
+}
 
+/* rpmsg_rx_callback will call into this for a channel creation event*/
+static void rpmsg_channel_created(struct rpmsg_channel *rp_chnl)
+{
+    /* We should give the created rp_chnl handler to app layer */
+    app_chnl = rp_chnl;
+
+    PRINTF("Name service handshake is done, M4 has setup a rpmsg channel [%d ---> %d]\r\n", app_chnl->src, app_chnl->dst);
+}
+
+static void rpmsg_channel_deleted(struct rpmsg_channel *rp_chnl)
+{
+}
+
+/*
+ * MU Interrrupt ISR
+ */
+void BOARD_MU_HANDLER(void)
+{
+    /*
+     * calls into rpmsg_handler provided by middleware
+     */
+    rpmsg_handler();
+}
 
 /*!
  * @brief Main function
  */
 int main(void)
 {
-
-    volatile uint32_t remote_addr;
-    struct rpmsg_lite_endpoint *volatile my_ept;
-    volatile rpmsg_queue_handle my_queue;
-    struct rpmsg_lite_instance *volatile my_rpmsg;
-    void *rx_buf;
-    uint32_t len;
-    int32_t result;
+    struct remote_device *rdev;
+    int len;
     void *tx_buf;
-    uint32_t size;
+    unsigned long size;
 
-    /* Initialize standard SDK demo application pins */
-    /* M7 has its local cache and enabled by default,
-     * need to set smart subsystems (0x28000000 ~ 0x3FFFFFFF)
-     * non-cacheable before accessing this address region */
-    BOARD_InitMemory();
+    hardware_init();
 
-    /* Board specific RDC settings */
-    BOARD_RdcInit();
+    /*
+     * Prepare for the MU Interrupt
+     *  MU must be initialized before rpmsg init is called
+     */
+    MU_Init(BOARD_MU_BASE_ADDR);
+    NVIC_SetPriority(BOARD_MU_IRQ_NUM, APP_MU_IRQ_PRIORITY);
+    NVIC_EnableIRQ(BOARD_MU_IRQ_NUM);
 
-    BOARD_InitBootPins();
-    BOARD_BootClockRUN();
-    BOARD_InitDebugConsole();
+    /* Print the initial banner */
+    PRINTF("\r\nRPMSG String Echo Bare Metal Demo...\r\n");
 
-    copyResourceTable();
+    /* RPMSG Init as REMOTE */
+    PRINTF("RPMSG Init as Remote\r\n");
+    rpmsg_init(0, &rdev, rpmsg_channel_created, rpmsg_channel_deleted, rpmsg_read_cb, RPMSG_MASTER);
 
-#ifdef MCMGR_USED
-    /* Initialize MCMGR before calling its API */
-    (void)MCMGR_Init();
-#endif /* MCMGR_USED */
-
-   /* Print the initial banner */
-    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...Bare Metal - by BTC...\r\n");
-
-#ifdef MCMGR_USED
-    uint32_t startupData;
-
-    /* Get the startup data */
-    (void)MCMGR_GetStartupData(kMCMGR_Core1, &startupData);
-
-    my_rpmsg = rpmsg_lite_remote_init((void *)startupData, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
-
-    /* Signal the other core we are ready */
-    (void)MCMGR_SignalReady(kMCMGR_Core1);
-#else
-    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
-#endif /* MCMGR_USED */
-
-   PRINTF("\r\nRPMSG ... Before  rpmsg_lite_is_link_up...\r\n");
-
-    while (0 == rpmsg_lite_is_link_up(my_rpmsg))
-        ;
-
-   PRINTF("\r\nRPMSG ... After  rpmsg_lite_is_link_up...\r\n");
-
-    my_queue = rpmsg_queue_create(my_rpmsg);
-   PRINTF("\r\nRPMSG ... After  rpmsg_queue_create...\r\n");
-    my_ept   = rpmsg_lite_create_ept(my_rpmsg, LOCAL_EPT_ADDR, rpmsg_queue_rx_cb, my_queue);
-   PRINTF("\r\nRPMSG ... After  rpmsg_lite_create_ept...\r\n");
-    (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
-  PRINTF("\r\nRPMSG ... After  rpmsg_ns_announce...\r\n");
- 
-    PRINTF("\r\nNameservice sent, ready for incoming messages...\r\n");
-
+    /*
+     * str_echo demo loop
+     */
     for (;;)
     {
-        /* Get RPMsg rx buffer with message */
-        result =
-            rpmsg_queue_recv_nocopy(my_rpmsg, my_queue, (uint32_t *)&remote_addr, (char **)&rx_buf, &len, RL_BLOCK);
-        if (result != 0)
-        {
-            assert(false);
-        }
+        /* Wait message to be available */
+        while (msg_count == 0)
+	{
+	}
 
         /* Copy string from RPMsg rx buffer */
+        len = app_msg[app_idx].len;
         assert(len < sizeof(app_buf));
-        memcpy(app_buf, rx_buf, len);
+        memcpy(app_buf, app_msg[app_idx].data, len);
         app_buf[len] = 0; /* End string by '\0' */
 
-        /* BTC Remove printfs so they are not included in throughput test */
-        
         if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
-            PRINTF("Get New Line From Master Side...BM \r\n");
+            PRINTF("Get New Line From Master Side From Slot %d\r\n", app_idx);
         else
-            PRINTF("Get Message From Master Side...BM  : \"%s\" [len : %d]\r\n", app_buf, len);
-        
+            PRINTF("Get Message From Master Side : \"%s\" [len : %d] from slot %d\r\n", app_buf, len, app_idx);
 
         /* Get tx buffer from RPMsg */
-        tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
+        tx_buf = rpmsg_alloc_tx_buffer(app_chnl, &size, RPMSG_TRUE);
         assert(tx_buf);
         /* Copy string to RPMsg tx buffer */
         memcpy(tx_buf, app_buf, len);
         /* Echo back received message with nocopy send */
-        result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, tx_buf, len);
-        if (result != 0)
-        {
-            assert(false);
-        }
+        rpmsg_sendto_nocopy(app_chnl, tx_buf, len, app_msg[app_idx].src);
+
         /* Release held RPMsg rx buffer */
-        result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
-        if (result != 0)
-        {
-            assert(false);
-        }
+        rpmsg_release_rx_buffer(app_chnl, app_msg[app_idx].data);
+        app_idx = (app_idx + 1) % STRING_BUFFER_CNT;
+
+        /* Once a message is consumed, minus the msg_count and might enable MU interrupt again */
+        rpmsg_enable_rx_int(true);
     }
 }
+
+/*******************************************************************************
+ * EOF
+ ******************************************************************************/
+
