@@ -79,13 +79,17 @@ int main(void)
 #ifdef MCMGR_USED
     /* Initialize MCMGR before calling its API */
     (void)MCMGR_Init();
+
+    PRINTF("\r\n In MCMGR_USED- by BTC...\r\n");
+
 #endif /* MCMGR_USED */
 
-   /* Print the initial banner */
-    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...Bare Metal - by BTC...\r\n");
 
 #ifdef MCMGR_USED
     uint32_t startupData;
+
+       /* Print the initial banner */
+    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...MCMGR_USED fake Bare Metal - by BTC...\r\n");
 
     /* Get the startup data */
     (void)MCMGR_GetStartupData(kMCMGR_Core1, &startupData);
@@ -95,13 +99,15 @@ int main(void)
     /* Signal the other core we are ready */
     (void)MCMGR_SignalReady(kMCMGR_Core1);
 #else
+       /* Print the initial banner */
+    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...NOT MCMGR_USED fake Bare Metal - by BTC...\r\n");
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
 #endif /* MCMGR_USED */
 
-   PRINTF("\r\nRPMSG ... Before  rpmsg_lite_is_link_up...\r\n");
+   PRINTF("\r\nRPMSG ... Before  rpmsg_lite_is_link_up... \r\n");
 
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
-        ;
+        NOP;
 
    PRINTF("\r\nRPMSG ... After  rpmsg_lite_is_link_up...\r\n");
 
