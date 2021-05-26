@@ -57,7 +57,7 @@ static void app_task(void *param)
     uint32_t size;
 
     /* Print the initial banner */
-    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...Bare Metal - by BTC...\r\n");
+    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...RTOS - by BTC...\r\n");
 
 #ifdef MCMGR_USED
     uint32_t startupData;
@@ -67,14 +67,14 @@ static void app_task(void *param)
 
     my_rpmsg = rpmsg_lite_remote_init((void *)startupData, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
 
-    PRINTF("After rpmsg_lite_remote_init, MCMGR_USED...BM \r\n");
+    PRINTF("After rpmsg_lite_remote_init, MCMGR_USED...RTOS \r\n");
     
     /* Signal the other core we are ready */
     (void)MCMGR_SignalReady(kMCMGR_Core1);
 #else
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
 
-    PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...BM \r\n");
+    PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...RTOS \r\n");
     
 #endif /* MCMGR_USED */
 
@@ -82,15 +82,15 @@ static void app_task(void *param)
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
         ;
 
-    PRINTF("After rpmsg_lite_is_link_up...BM \r\n");
+    PRINTF("After rpmsg_lite_is_link_up...RTOS \r\n");
     
     my_queue = rpmsg_queue_create(my_rpmsg);
 
-    PRINTF("After rpmsg_queue_create...BM \r\n");
+    PRINTF("After rpmsg_queue_create...RTOS \r\n");
 
     my_ept   = rpmsg_lite_create_ept(my_rpmsg, LOCAL_EPT_ADDR, rpmsg_queue_rx_cb, my_queue);
     
-    PRINTF("After rpmsg_lite_create_ept...BM \r\n");
+    PRINTF("After rpmsg_lite_create_ept...RTOS \r\n");
 
     (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
 
@@ -114,9 +114,9 @@ static void app_task(void *param)
         /* BTC Remove printfs so they are not included in throughput test */
         
         if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
-            PRINTF("Get New Line From Master Side...BM \r\n");
+            PRINTF("Get New Line From Master Side...RTOS \r\n");
         else
-            PRINTF("Get Message From Master Side...BM  : \"%s\" [len : %d]\r\n", app_buf, len);
+            PRINTF("Get Message From Master Side...RTOS  : \"%s\" [len : %d]\r\n", app_buf, len);
         
 
         /* Get tx buffer from RPMsg */
