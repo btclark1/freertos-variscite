@@ -5,12 +5,9 @@ Bare-Metal
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "rpmsg_env.h"
-
+#include "rpmsg_lite.h"
 #include "rpmsg_queue.h"
 #include "rpmsg_ns.h"
-
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
@@ -73,6 +70,11 @@ int main(void)
     copyResourceTable();
     
 
+    volatile uint32_t i = 0;
+    for (i = 0; i < 10000000; ++i)
+    {
+        __NOP(); /* delay */
+    }
 
     /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...RTOS BM - by BTC...\r\n");
