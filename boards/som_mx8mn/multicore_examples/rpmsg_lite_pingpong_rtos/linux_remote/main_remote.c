@@ -1,9 +1,5 @@
 /*
- * Copyright (c) 2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2020 NXP
- * All rights reserved.
- *
- * SPDX-License-Identifier: BSD-3-Clause
+Bare-Metal
  */
 
 #include <stdio.h>
@@ -11,40 +7,28 @@
 #include <string.h>
 #include "rpmsg_lite.h"
 #include "rpmsg_queue.h"
-#include "rpmsg_ns.h"
+#include "rpmsg_ns.h"nxp
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
 #include "fsl_debug_console.h"
-#include "FreeRTOS.h"
-#include "task.h"
+
 
 #include "fsl_uart.h"
 #include "rsc_table.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define RPMSG_LITE_LINK_ID            (RL_PLATFORM_IMX8MN_M7_USER_LINK_ID)
 #define RPMSG_LITE_SHMEM_BASE         (VDEV0_VRING_BASE)
-#define RPMSG_LITE_NS_ANNOUNCE_STRING "rpmsg-openamp-demo-channel"
-#define RPMSG_LITE_MASTER_IS_LINUX
-
-#define APP_DEBUG_UART_BAUDRATE (115200U) /* Debug console baud rate. */
-#define APP_TASK_STACK_SIZE (256U)
+#define RPMSG_LITE_LINK_ID            (RL_PLATFORM_IMX8MN_M7_USER_LINK_ID)
+#define RPMSG_LITE_NS_ANNOUNCE_STRING "rpmsg-virtual-tty-channel-1"
+#define APP_TASK_STACK_SIZE (256)
 #ifndef LOCAL_EPT_ADDR
-#define LOCAL_EPT_ADDR (30U)
+#define LOCAL_EPT_ADDR (30)
 #endif
-#define APP_RPMSG_READY_EVENT_DATA (1U)
 
-typedef struct the_message
-{
-    uint32_t DATA;
-} THE_MESSAGE, *THE_MESSAGE_PTR;
-
-static volatile THE_MESSAGE msg = {0};
-#ifdef RPMSG_LITE_MASTER_IS_LINUX
-static char helloMsg[13];
-#endif /* RPMSG_LITE_MASTER_IS_LINUX */
+/* Globals */
+static char app_buf[512]; /* Each RPMSG buffer can carry less than 512 payload */
 
 /*******************************************************************************
  * Prototypes
@@ -53,106 +37,23 @@ static char helloMsg[13];
 /*******************************************************************************
  * Code
  ******************************************************************************/
-static TaskHandle_t app_task_handle = NULL;
-
-static void app_nameservice_isr_cb(uint32_t new_ept, const char *new_ept_name, uint32_t flags, void *user_data)
-{
-}
-
-#ifdef MCMGR_USED
-/*!
- * @brief Application-specific implementation of the SystemInitHook() weak function.
- */
-void SystemInitHook(void)
-{
-    /* Initialize MCMGR - low level multicore management library. Call this
-       function as close to the reset entry as possible to allow CoreUp event
-       triggering. The SystemInitHook() weak function overloading is used in this
-       application. */
-    (void)MCMGR_EarlyInit();
-}
-#endif /* MCMGR_USED */
-
-static void app_task(void *param)
-{
-    volatile uint32_t remote_addr;
-    struct rpmsg_lite_endpoint *volatile my_ept;
-    volatile rpmsg_queue_handle my_queue;
-    struct rpmsg_lite_instance *volatile my_rpmsg;
-    volatile rpmsg_ns_handle ns_handle;
-
-    /* Print the initial banner */
-    (void)PRINTF("\r\nRPMSG Ping-Pong FreeRTOS RTOS API Demo...\r\n");
-
-#ifdef MCMGR_USED
-    uint32_t startupData;
-    mcmgr_status_t status;
-
-    /* Get the startup data */
-    do
-    {
-        status = MCMGR_GetStartupData(&startupData);
-    } while (status != kStatus_MCMGR_Success);
-
-    my_rpmsg = rpmsg_lite_remote_init((void *)(char *)startupData, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
-
-    /* Signal the other core we are ready by triggering the event and passing the APP_RPMSG_READY_EVENT_DATA */
-    (void)MCMGR_TriggerEvent(kMCMGR_RemoteApplicationEvent, APP_RPMSG_READY_EVENT_DATA);
-#else
-    (void)PRINTF("RPMSG Share Base Addr is 0x%x\r\n", RPMSG_LITE_SHMEM_BASE);
-    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
-#endif /* MCMGR_USED */
-    while (0 == rpmsg_lite_is_link_up(my_rpmsg))
-    {
-    }
-    (void)PRINTF("Link is up!\r\n");
-
-    my_queue  = rpmsg_queue_create(my_rpmsg);
-    my_ept    = rpmsg_lite_create_ept(my_rpmsg, LOCAL_EPT_ADDR, rpmsg_queue_rx_cb, my_queue);
-    ns_handle = rpmsg_ns_bind(my_rpmsg, app_nameservice_isr_cb, ((void *)0));
-    SDK_DelayAtLeastUs(1000000U, SDK_DEVICE_MAXIMUM_CPU_CLOCK_FREQUENCY);
-    (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, (uint32_t)RL_NS_CREATE);
-    (void)PRINTF("Nameservice announce sent.\r\n");
-
-#ifdef RPMSG_LITE_MASTER_IS_LINUX
-    /* Wait Hello handshake message from Remote Core. */
-    (void)rpmsg_queue_recv(my_rpmsg, my_queue, (uint32_t *)&remote_addr, helloMsg, sizeof(helloMsg), ((void *)0),
-                           RL_BLOCK);
-#endif /* RPMSG_LITE_MASTER_IS_LINUX */
-
-    while (msg.DATA <= 100U)
-    {
-        (void)PRINTF("Waiting for ping...\r\n");
-        (void)rpmsg_queue_recv(my_rpmsg, my_queue, (uint32_t *)&remote_addr, (char *)&msg, sizeof(THE_MESSAGE),
-                               ((void *)0), RL_BLOCK);
-        msg.DATA++;
-        (void)PRINTF("Sending pong...\r\n");
-        (void)rpmsg_lite_send(my_rpmsg, my_ept, remote_addr, (char *)&msg, sizeof(THE_MESSAGE), RL_BLOCK);
-    }
-
-    (void)PRINTF("Ping pong done, deinitializing...\r\n");
-
-    (void)rpmsg_lite_destroy_ept(my_rpmsg, my_ept);
-    my_ept = ((void *)0);
-    (void)rpmsg_queue_destroy(my_rpmsg, my_queue);
-    my_queue = ((void *)0);
-    (void)rpmsg_ns_unbind(my_rpmsg, ns_handle);
-    (void)rpmsg_lite_deinit(my_rpmsg);
-    msg.DATA = 0U;
-
-    (void)PRINTF("Looping forever...\r\n");
-
-    /* End of the example */
-    for (;;)
-    {
-    }
-}
 
 /*!
  * @brief Main function
  */
 int main(void)
 {
+
+    volatile uint32_t remote_addr;
+    struct rpmsg_lite_endpoint *volatile my_ept;
+    volatile rpmsg_queue_handle my_queue;
+    struct rpmsg_lite_instance *volatile my_rpmsg;
+    void *rx_buf;
+    uint32_t len;
+    int32_t result;
+    void *tx_buf;
+    uint32_t size;
+
     /* Initialize standard SDK demo application pins */
     /* M7 has its local cache and enabled by default,
      * need to set smart subsystems (0x28000000 ~ 0x3FFFFFFF)
@@ -165,25 +66,76 @@ int main(void)
     BOARD_InitBootPins();
     BOARD_BootClockRUN();
     BOARD_InitDebugConsole();
+
     copyResourceTable();
+    
 
-#ifdef MCMGR_USED
-    /* Initialize MCMGR before calling its API */
-    (void)MCMGR_Init();
-#endif /* MCMGR_USED */
 
-    if (xTaskCreate(app_task, "APP_TASK", APP_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1U, &app_task_handle) != pdPASS)
-    {
-        (void)PRINTF("\r\nFailed to create application task\r\n");
-        for (;;)
-        {
-        }
-    }
+    /* Print the initial banner */
+    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...RTOS - by BTC...\r\n");
 
-    vTaskStartScheduler();
 
-    (void)PRINTF("Failed to start FreeRTOS on core0.\r\n");
+    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
+
+    PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...RTOS \r\n");
+    
+    
+    while (0 == rpmsg_lite_is_link_up(my_rpmsg))
+        ;
+
+    PRINTF("After rpmsg_lite_is_link_up...RTOS \r\n");
+    
+    my_queue = rpmsg_queue_create(my_rpmsg);
+
+    PRINTF("After rpmsg_queue_create...RTOS \r\n");
+
+    my_ept   = rpmsg_lite_create_ept(my_rpmsg, LOCAL_EPT_ADDR, rpmsg_queue_rx_cb, my_queue);
+    
+    PRINTF("After rpmsg_lite_create_ept...RTOS \r\n");
+
+    (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
+
+    PRINTF("\r\nNameservice sent, ready for incoming messages...\r\n");
+
     for (;;)
     {
+        /* Get RPMsg rx buffer with message */
+        result =
+            rpmsg_queue_recv_nocopy(my_rpmsg, my_queue, (uint32_t *)&remote_addr, (char **)&rx_buf, &len, RL_BLOCK);
+        if (result != 0)
+        {
+            assert(false);
+        }
+
+        /* Copy string from RPMsg rx buffer */
+        assert(len < sizeof(app_buf));
+        memcpy(app_buf, rx_buf, len);
+        app_buf[len] = 0; /* End string by '\0' */
+
+        /* BTC Remove printfs so they are not included in throughput test */
+        
+        if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
+            PRINTF("Get New Line From Master Side...RTOS \r\n");
+        else
+            PRINTF("Get Message From Master Side...RTOS  : \"%s\" [len : %d]\r\n", app_buf, len);
+        
+
+        /* Get tx buffer from RPMsg */
+        tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
+        assert(tx_buf);
+        /* Copy string to RPMsg tx buffer */
+        memcpy(tx_buf, app_buf, len);
+        /* Echo back received message with nocopy send */
+        result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, tx_buf, len);
+        if (result != 0)
+        {
+            assert(false);
+        }
+        /* Release held RPMsg rx buffer */
+        result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
+        if (result != 0)
+        {
+            assert(false);
+        }
     }
 }
