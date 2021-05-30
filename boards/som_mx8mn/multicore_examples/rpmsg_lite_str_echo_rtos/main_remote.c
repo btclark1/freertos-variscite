@@ -1,9 +1,5 @@
 /*
- * Copyright (c) 2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2017 NXP
- * All rights reserved.
- *
- * SPDX-License-Identifier: BSD-3-Clause
+Bare-Metal
  */
 
 #include <stdio.h>
@@ -11,13 +7,11 @@
 #include <string.h>
 #include "rpmsg_lite.h"
 #include "rpmsg_queue.h"
-#include "rpmsg_ns.h"
+#include "rpmsg_ns.h"nxp
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
 #include "fsl_debug_console.h"
-#include "FreeRTOS.h"
-#include "task.h"
 
 
 #include "fsl_uart.h"
@@ -43,10 +37,13 @@ static char app_buf[512]; /* Each RPMSG buffer can carry less than 512 payload *
 /*******************************************************************************
  * Code
  ******************************************************************************/
-static TaskHandle_t app_task_handle = NULL;
 
-static void app_task(void *param)
+/*!
+ * @brief Main function
+ */
+int main(void)
 {
+
     volatile uint32_t remote_addr;
     struct rpmsg_lite_endpoint *volatile my_ept;
     volatile rpmsg_queue_handle my_queue;
@@ -57,45 +54,48 @@ static void app_task(void *param)
     void *tx_buf;
     uint32_t size;
 
-    /* Print the initial banner */
-    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...RTOS - by BTC...\r\n");
+    /* Initialize standard SDK demo application pins */
+    /* M7 has its local cache and enabled by default,
+     * need to set smart subsystems (0x28000000 ~ 0x3FFFFFFF)
+     * non-cacheable before accessing this address region */
+    BOARD_InitMemory();
 
-#ifdef MCMGR_USED
-    uint32_t startupData;
+    /* Board specific RDC settings */
+    BOARD_RdcInit();
 
-    /* Get the startup data */
-    (void)MCMGR_GetStartupData(kMCMGR_Core1, &startupData);
+    BOARD_InitBootPins();
+    BOARD_BootClockRUN();
+    BOARD_InitDebugConsole();
 
-    my_rpmsg = rpmsg_lite_remote_init((void *)startupData, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
-
-    PRINTF("After rpmsg_lite_remote_init, MCMGR_USED...RTOS \r\n");
+    copyResourceTable();
     
-    /* Signal the other core we are ready */
-    (void)MCMGR_SignalReady(kMCMGR_Core1);
-#else
+
+
+    /* Print the initial banner */
+    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...RTOS BM - by BTC...\r\n");
+
+
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
 
-    PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...RTOS \r\n");
+    PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...RTOS BM \r\n");
     
-#endif /* MCMGR_USED */
-
     
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
         ;
 
-    PRINTF("After rpmsg_lite_is_link_up...RTOS \r\n");
+    PRINTF("After rpmsg_lite_is_link_up...RTOS BM \r\n");
     
     my_queue = rpmsg_queue_create(my_rpmsg);
 
-    PRINTF("After rpmsg_queue_create...RTOS \r\n");
+    PRINTF("After rpmsg_queue_create...RTOS BM \r\n");
 
     my_ept   = rpmsg_lite_create_ept(my_rpmsg, LOCAL_EPT_ADDR, rpmsg_queue_rx_cb, my_queue);
     
-    PRINTF("After rpmsg_lite_create_ept...RTOS \r\n");
+    PRINTF("After rpmsg_lite_create_ept...RTOS BM \r\n");
 
     (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
 
-    PRINTF("\r\nNameservice sent, ready for incoming messages...\r\n");
+    PRINTF("\r\nNameservice sent, ready for incoming messages... BM ... BTC ...\r\n");
 
     for (;;)
     {
@@ -138,43 +138,4 @@ static void app_task(void *param)
             assert(false);
         }
     }
-}
-
-/*!
- * @brief Main function
- */
-int main(void)
-{
-    /* Initialize standard SDK demo application pins */
-    /* M7 has its local cache and enabled by default,
-     * need to set smart subsystems (0x28000000 ~ 0x3FFFFFFF)
-     * non-cacheable before accessing this address region */
-    BOARD_InitMemory();
-
-    /* Board specific RDC settings */
-    BOARD_RdcInit();
-
-    BOARD_InitBootPins();
-    BOARD_BootClockRUN();
-    BOARD_InitDebugConsole();
-
-    copyResourceTable();
-
-#ifdef MCMGR_USED
-    /* Initialize MCMGR before calling its API */
-    (void)MCMGR_Init();
-#endif /* MCMGR_USED */
-
-    if (xTaskCreate(app_task, "APP_TASK", APP_TASK_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &app_task_handle) != pdPASS)
-    {
-        PRINTF("\r\nFailed to create application task\r\n");
-        for (;;)
-            ;
-    }
-
-    vTaskStartScheduler();
-
-    PRINTF("Failed to start FreeRTOS on core0.\n");
-    for (;;)
-        ;
 }
