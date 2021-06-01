@@ -48,7 +48,13 @@ int main(void)
     struct rpmsg_lite_endpoint *volatile my_ept;
     volatile rpmsg_queue_handle my_queue;
     struct rpmsg_lite_instance *volatile my_rpmsg;
+    
+    /* BTC - Environment layer context
+      Enabled using RL_USE_ENVIRONMENT_CONTEXT in rpmsg_config.h (in this folder)
+      When enabled the environment layer uses its own context.*/
+    struct rpmsg_lite_instance *volatile s_rpmsg_ctxt;
     void *rx_buf;
+
     uint32_t len;
     int32_t result;
     void *tx_buf;
@@ -75,7 +81,10 @@ int main(void)
     PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...BM - by BTC...\r\n");
 
 
-    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
+    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, 
+                                                RPMSG_LITE_LINK_ID, 
+                                                RL_NO_FLAGS, 
+                                                &s_rpmsg_ctxt);
 
     PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...BM \r\n");
     
