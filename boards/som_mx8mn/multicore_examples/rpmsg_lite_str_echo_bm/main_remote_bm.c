@@ -94,7 +94,8 @@ int main(void)
         PRINTF("Calling ready_cb ...BM \r\n");
         ready_cb();
     }
-    PRINTF("After ready_cb, ...BM \r\n");
+   PRINTF("After ready_cb, ...BM \r\n");
+
 
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
         ;
