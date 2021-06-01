@@ -74,14 +74,10 @@ int main(void)
 
     /* Board specific RDC settings */
     BOARD_RdcInit();
-
     BOARD_InitBootPins();
     BOARD_BootClockRUN();
     BOARD_InitDebugConsole();
-
     copyResourceTable();
-    
-
 
     /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...BM - by BTC...\r\n");
@@ -90,17 +86,21 @@ int main(void)
                                                 RPMSG_LITE_LINK_ID, 
                                                 RL_NO_FLAGS, 
                                                 &s_rpmsg_ctxt);
+    PRINTF("After rpmsg_lite_remote_init, ...BM \r\n");
+    
+    /* Signal the other core we are ready */
+    if (ready_cb != NULL)
+    {
+        PRINTF("Calling ready_cb ...BM \r\n");
+        ready_cb();
+    }
+    PRINTF("After ready_cb, ...BM \r\n");
 
-    PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...BM \r\n");
-    
-    
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
         ;
-
     PRINTF("After rpmsg_lite_is_link_up...BM \r\n");
     
     my_queue = rpmsg_queue_create(my_rpmsg);
-
     PRINTF("After rpmsg_queue_create...BM \r\n");
 
     my_ept   = rpmsg_lite_create_ept(my_rpmsg, 
@@ -108,7 +108,6 @@ int main(void)
                                         rpmsg_queue_rx_cb,
                                         my_queue,
                                         &s_ept_context);
-    
     PRINTF("After rpmsg_lite_create_ept...BM \r\n");
 
     (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
