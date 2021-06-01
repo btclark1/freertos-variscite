@@ -83,7 +83,7 @@ int main(void)
     copyResourceTable();
 
     /* Print the initial banner */
-    PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...BM - by BTC...\r\n");
+    PRINTF("\r\nRPMSG String Echo .... API Demo...BM - by BTC...\r\n");
 
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, 
                                                 RPMSG_LITE_LINK_ID, 
