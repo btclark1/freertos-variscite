@@ -5,7 +5,11 @@ Bare-Metal
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rpmsg_lite.h"
+
+#include "rpmsg_env.h"
+
+/*#include "rpmsg_lite.h"*/
+
 #include "rpmsg_queue.h"
 #include "rpmsg_ns.h"
 #include "pin_mux.h"
@@ -52,7 +56,9 @@ int main(void)
     /* BTC - Environment layer context
       Enabled using RL_USE_ENVIRONMENT_CONTEXT in rpmsg_config.h (in this folder)
       When enabled the environment layer uses its own context.*/
-    struct rpmsg_lite_instance *s_rpmsg_ctxt;
+    struct rpmsg_lite_instance s_rpmsg_ctxt;
+    struct rpmsg_lite_ept_static_context s_ept_context;
+
     void *rx_buf;
 
     uint32_t len;
@@ -80,11 +86,10 @@ int main(void)
     /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...BM - by BTC...\r\n");
 
-
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, 
                                                 RPMSG_LITE_LINK_ID, 
                                                 RL_NO_FLAGS, 
-                                                s_rpmsg_ctxt);
+                                                &s_rpmsg_ctxt);
 
     PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...BM \r\n");
     
@@ -98,7 +103,11 @@ int main(void)
 
     PRINTF("After rpmsg_queue_create...BM \r\n");
 
-    my_ept   = rpmsg_lite_create_ept(my_rpmsg, LOCAL_EPT_ADDR, rpmsg_queue_rx_cb, my_queue);
+    my_ept   = rpmsg_lite_create_ept(my_rpmsg, 
+                                        LOCAL_EPT_ADDR,
+                                        rpmsg_queue_rx_cb,
+                                        my_queue,
+                                        &s_ept_context);
     
     PRINTF("After rpmsg_lite_create_ept...BM \r\n");
 

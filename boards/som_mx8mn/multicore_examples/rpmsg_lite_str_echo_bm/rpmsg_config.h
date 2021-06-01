@@ -49,7 +49,7 @@
 //!
 //! Static API functions (no dynamic allocation) enabled/disabled.
 //! The default value is 0 (static API disabled).
-#define RL_USE_STATIC_API (0)
+#define RL_USE_STATIC_API (1)
 
 //! @def RL_CLEAR_USED_BUFFERS
 //!
@@ -71,7 +71,7 @@
 //! When enabled the environment layer uses its own context.
 //! Added for QNX port mainly, but can be used if required.
 //! The default value is 0 (no context, saves some RAM).
-#define RL_USE_ENVIRONMENT_CONTEXT (1)
+#define RL_USE_ENVIRONMENT_CONTEXT (0)
 
 //! @def RL_DEBUG_CHECK_BUFFERS
 //!
