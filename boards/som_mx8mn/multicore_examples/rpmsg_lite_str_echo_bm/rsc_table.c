@@ -13,7 +13,11 @@
 
 #include "board.h"
 #include "rsc_table.h"
-#include "rpmsg_lite.h"
+
+#include "rpmsg_env.h"
+
+/* BTC - Orig -#include "rpmsg_lite.h" */
+
 #include <string.h>
 
 #define NUM_VRINGS 0x02
