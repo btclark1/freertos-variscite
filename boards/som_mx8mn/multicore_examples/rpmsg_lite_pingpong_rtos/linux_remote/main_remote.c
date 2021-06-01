@@ -7,7 +7,7 @@ Bare-Metal
 #include <string.h>
 #include "rpmsg_lite.h"
 #include "rpmsg_queue.h"
-#include "rpmsg_ns.h"nxp
+#include "rpmsg_ns.h"
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
