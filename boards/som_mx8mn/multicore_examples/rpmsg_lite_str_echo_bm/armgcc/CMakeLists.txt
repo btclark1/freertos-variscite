@@ -32,6 +32,7 @@ include(${ProjDirPath}/config.cmake)
 
 add_executable(${MCUX_SDK_PROJECT_NAME} 
 "${ProjDirPath}/../main_remote_bm.c"
+"${ProjDirPath}/../FreeRTOSConfig.h"
 "${ProjDirPath}/../pin_mux.c"
 "${ProjDirPath}/../pin_mux.h"
 "${ProjDirPath}/../rpmsg_config.h"

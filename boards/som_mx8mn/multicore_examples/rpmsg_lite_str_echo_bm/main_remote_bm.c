@@ -59,6 +59,9 @@ int main(void)
     struct rpmsg_lite_instance s_rpmsg_ctxt;
     struct rpmsg_lite_ept_static_context s_ept_context;
 
+    int32_t init;
+
+
     void *rx_buf;
 
     uint32_t len;
@@ -89,13 +92,13 @@ int main(void)
     PRINTF("After rpmsg_lite_remote_init, ...BM \r\n");
     
     /* Signal the other core we are ready */
-    if (ready_cb != NULL)
+/*    if (ready_cb != NULL)
     {
         PRINTF("Calling ready_cb ...BM \r\n");
         ready_cb();
     }
    PRINTF("After ready_cb, ...BM \r\n");
-
+*/
 
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
         ;
