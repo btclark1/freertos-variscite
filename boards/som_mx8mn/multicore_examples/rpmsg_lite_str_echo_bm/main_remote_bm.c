@@ -52,7 +52,7 @@ int main(void)
     /* BTC - Environment layer context
       Enabled using RL_USE_ENVIRONMENT_CONTEXT in rpmsg_config.h (in this folder)
       When enabled the environment layer uses its own context.*/
-    struct rpmsg_lite_instance *volatile s_rpmsg_ctxt;
+    struct rpmsg_lite_instance *s_rpmsg_ctxt;
     void *rx_buf;
 
     uint32_t len;
@@ -84,7 +84,7 @@ int main(void)
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, 
                                                 RPMSG_LITE_LINK_ID, 
                                                 RL_NO_FLAGS, 
-                                                &s_rpmsg_ctxt);
+                                                s_rpmsg_ctxt);
 
     PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...BM \r\n");
     
