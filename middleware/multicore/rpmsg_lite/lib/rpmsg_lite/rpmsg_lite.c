@@ -33,7 +33,7 @@
 #include "rpmsg_lite.h"
 #include "rpmsg_platform.h"
 
-#include "stdio.h"
+#include <stdio.h>
 
 /* rpmsg_std_hdr contains a reserved field,
  * this implementation of RPMSG uses this reserved
