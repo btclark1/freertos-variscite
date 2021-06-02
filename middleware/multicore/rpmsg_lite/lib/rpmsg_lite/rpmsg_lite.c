@@ -1094,20 +1094,19 @@ struct rpmsg_lite_instance *rpmsg_lite_master_init(void *shmem_addr,
 struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
                                                    uint32_t link_id,
                                                    uint32_t init_flags,
-                                                   struct rpmsg_lite_instance *static_context,
-                                                   uint32_t *debug)
-aaaaaaa
-
+                                                   struct rpmsg_lite_instance *static_context)
+aaaaaa
 #elif defined(RL_USE_ENVIRONMENT_CONTEXT) && (RL_USE_ENVIRONMENT_CONTEXT == 1)
 struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
                                                    uint32_t link_id,
                                                    uint32_t init_flags,
                                                    void *env_cfg)
-sbbbbbbb
-
+bbbbbb
 #else
-struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t link_id, uint32_t init_flags)
-ccccccc
+struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, 
+                                                    uint32_t link_id, 
+                                                    uint32_t init_flags,
+                                                    uint32_t *debug)
 
 #endif
 {
