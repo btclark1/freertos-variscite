@@ -83,7 +83,9 @@ int main(void)
                                                 RL_NO_FLAGS, 
                                                 &debug);
  
-   PRINTF("After rpmsg_lite_remote_init, ...BM , debug = 0x%x\r\n", debug);
+   PRINTF("After rpmsg_lite_remote_init, ...BM , my_rpmsg->link_state = %d, debug = 0x%x\r\n",
+                                                     my_rpmsg->link_state,
+                                                     debug);
    
     /* Signal the other core we are ready */
 /*    if (ready_cb != NULL)
