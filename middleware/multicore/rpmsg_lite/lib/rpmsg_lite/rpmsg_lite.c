@@ -33,6 +33,8 @@
 #include "rpmsg_lite.h"
 #include "rpmsg_platform.h"
 
+#include "stdio.h"
+
 /* rpmsg_std_hdr contains a reserved field,
  * this implementation of RPMSG uses this reserved
  * field to hold the idx and totlen of the buffer
@@ -1086,6 +1088,8 @@ struct rpmsg_lite_instance *rpmsg_lite_master_init(void *shmem_addr,
     return rpmsg_lite_dev;
 }
 
+#define BTC
+
 #if defined(RL_USE_STATIC_API) && (RL_USE_STATIC_API == 1)
 struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
                                                    uint32_t link_id,
@@ -1110,17 +1114,27 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
 
     if (link_id > RL_PLATFORM_HIGHEST_LINK_ID)
     {
+#if defined(BTC)        
+        printf("In rpmsg_lite_remote_init...BM  1 \r\n");
+#endif
         return RL_NULL;
     }
 
     if (shmem_addr == RL_NULL)
     {
+#if defined(BTC)        
+        printf("In rpmsg_lite_remote_init...BM  2 \r\n");
+#endif
+
         return RL_NULL;
     }
 
 #if defined(RL_USE_STATIC_API) && (RL_USE_STATIC_API == 1)
     if (static_context == RL_NULL)
     {
+#if defined(BTC)        
+        printf("In rpmsg_lite_remote_init...BM  3 \r\n");
+#endif
         return RL_NULL;
     }
     rpmsg_lite_dev = static_context;
@@ -1128,6 +1142,9 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
     rpmsg_lite_dev = env_allocate_memory(sizeof(struct rpmsg_lite_instance));
     if (rpmsg_lite_dev == RL_NULL)
     {
+#if defined(BTC)        
+        printf("In rpmsg_lite_remote_init...BM  4 \r\n");
+#endif
         return RL_NULL;
     }
 #endif
@@ -1143,6 +1160,9 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
     {
 #if !(defined(RL_USE_STATIC_API) && (RL_USE_STATIC_API == 1))
         env_free_memory(rpmsg_lite_dev);
+#endif
+#if defined(BTC)        
+        printf("In rpmsg_lite_remote_init...BM  5 \r\n");
 #endif
         return RL_NULL;
     }
@@ -1176,6 +1196,11 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
 #if !(defined(RL_USE_STATIC_API) && (RL_USE_STATIC_API == 1))
             env_free_memory(rpmsg_lite_dev);
 #endif
+
+#if defined(BTC)        
+        printf("In rpmsg_lite_remote_init...BM  6 \r\n");
+#endif
+
             return RL_NULL;
         }
 
@@ -1191,6 +1216,10 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
     {
 #if !(defined(RL_USE_STATIC_API) && (RL_USE_STATIC_API == 1))
         env_free_memory(rpmsg_lite_dev);
+#endif
+
+#if defined(BTC)        
+        printf("In rpmsg_lite_remote_init...BM  7 \r\n");
 #endif
         return RL_NULL;
     }
