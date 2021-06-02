@@ -1114,7 +1114,10 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
 
     if (link_id > RL_PLATFORM_HIGHEST_LINK_ID)
     {
-#if defined(BTC)        
+1111111111111
+#if defined(BTC) 
+222222222222222
+
         printf("In rpmsg_lite_remote_init...BM  1 \r\n");
 #endif
         return RL_NULL;
