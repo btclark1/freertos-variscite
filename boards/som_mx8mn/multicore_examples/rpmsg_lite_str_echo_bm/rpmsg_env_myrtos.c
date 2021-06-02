@@ -66,6 +66,8 @@ int main(void)
     void *tx_buf;
     uint32_t size;
 
+    uint32_t debug = 0;
+
     /* Initialize standard SDK demo application pins */
     /* M7 has its local cache and enabled by default,
      * need to set smart subsystems (0x28000000 ~ 0x3FFFFFFF)
@@ -85,9 +87,10 @@ int main(void)
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, 
                                                 RPMSG_LITE_LINK_ID, 
                                                 RL_NO_FLAGS, 
-                                                &s_rpmsg_ctxt);
+                                                &s_rpmsg_ctxt,
+                                                &debug);
  
-   PRINTF("After rpmsg_lite_remote_init, ...BM \r\n");
+   PRINTF("After rpmsg_lite_remote_init, ...BM , debug = 0x%x\r\n", debug);
    
     /* Signal the other core we are ready */
 /*    if (ready_cb != NULL)

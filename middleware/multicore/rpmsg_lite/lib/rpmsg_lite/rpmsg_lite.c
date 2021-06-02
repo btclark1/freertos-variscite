@@ -1094,7 +1094,8 @@ struct rpmsg_lite_instance *rpmsg_lite_master_init(void *shmem_addr,
 struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
                                                    uint32_t link_id,
                                                    uint32_t init_flags,
-                                                   struct rpmsg_lite_instance *static_context)
+                                                   struct rpmsg_lite_instance *static_context,
+                                                   uint32_t *debug)
 #elif defined(RL_USE_ENVIRONMENT_CONTEXT) && (RL_USE_ENVIRONMENT_CONTEXT == 1)
 struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
                                                    uint32_t link_id,
@@ -1116,7 +1117,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
     {
 
 #if defined(BTC) 
-        printf("In rpmsg_lite_remote_init...BM  1 \r\n");
+        *debug = 1;
 #endif
         return RL_NULL;
     }
@@ -1124,7 +1125,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
     if (shmem_addr == RL_NULL)
     {
 #if defined(BTC)        
-        printf("In rpmsg_lite_remote_init...BM  2 \r\n");
+        *debug |= 2;
 #endif
 
         return RL_NULL;
@@ -1134,7 +1135,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
     if (static_context == RL_NULL)
     {
 #if defined(BTC)        
-        printf("In rpmsg_lite_remote_init...BM  3 \r\n");
+        *debug |= 4;
 #endif
         return RL_NULL;
     }
@@ -1144,7 +1145,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
     if (rpmsg_lite_dev == RL_NULL)
     {
 #if defined(BTC)        
-        printf("In rpmsg_lite_remote_init...BM  4 \r\n");
+        *debug |= 8;
 #endif
         return RL_NULL;
     }
@@ -1163,7 +1164,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
         env_free_memory(rpmsg_lite_dev);
 #endif
 #if defined(BTC)        
-        printf("In rpmsg_lite_remote_init...BM  5 \r\n");
+        *debug |= 16;
 #endif
         return RL_NULL;
     }
@@ -1199,7 +1200,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
 #endif
 
 #if defined(BTC)        
-        printf("In rpmsg_lite_remote_init...BM  6 \r\n");
+        *debug |= 32;
 #endif
 
             return RL_NULL;
@@ -1220,7 +1221,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t li
 #endif
 
 #if defined(BTC)        
-        printf("In rpmsg_lite_remote_init...BM  7 \r\n");
+        *debug |= 64;
 #endif
         return RL_NULL;
     }
