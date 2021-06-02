@@ -1085,6 +1085,8 @@ struct rpmsg_lite_instance *rpmsg_lite_master_init(void *shmem_addr,
      */
     virtqueue_kick(rpmsg_lite_dev->rvq);
 
+printf("\n\n\n  **************** In rpmsg_lite_master_init...BM \r\n\n");
+
     return rpmsg_lite_dev;
 }
 
@@ -1117,6 +1119,8 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
     struct virtqueue *vqs[2];
     uint32_t idx;
     struct rpmsg_lite_instance *rpmsg_lite_dev = RL_NULL;
+
+
 
     if (link_id > RL_PLATFORM_HIGHEST_LINK_ID)
     {
@@ -1231,6 +1235,13 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
         return RL_NULL;
     }
 
+    /* BTC - Check rpmsg_lite_dev->link_state to see if Master already set to 1 */
+    if(rpmsg_lite_dev->link_state == 1)
+    {
+        *debug |= 128;
+    }
+
+
     // FIXME - a better way to handle this , tx for master is rx for remote and vice versa.
     rpmsg_lite_dev->tvq = vqs[0];
     rpmsg_lite_dev->rvq = vqs[1];
@@ -1253,8 +1264,6 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
     env_enable_interrupt(rpmsg_lite_dev->rvq->vq_queue_index);
     env_enable_interrupt(rpmsg_lite_dev->tvq->vq_queue_index);
 #endif
-
-*debug = 1122;
 
     return rpmsg_lite_dev;
 }
