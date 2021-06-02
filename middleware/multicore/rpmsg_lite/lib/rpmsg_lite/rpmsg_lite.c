@@ -1254,6 +1254,8 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
     env_enable_interrupt(rpmsg_lite_dev->tvq->vq_queue_index);
 #endif
 
+debug = 1122;
+
     return rpmsg_lite_dev;
 }
 
