@@ -76,9 +76,6 @@ static struct isr_info isr_table[ISR_COUNT];
  */
 int32_t env_init(void)
 {
-
-    PRINTF("In env_init in rpmsg_env_bm...BM \r\n");
-
     // verify 'env_init_counter'
     RL_ASSERT(env_init_counter >= 0);
     if (env_init_counter < 0)

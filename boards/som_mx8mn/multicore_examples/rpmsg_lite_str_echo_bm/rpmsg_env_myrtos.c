@@ -53,12 +53,6 @@ int main(void)
     volatile rpmsg_queue_handle my_queue;
     struct rpmsg_lite_instance *volatile my_rpmsg;
     
-    /* BTC - Environment layer context
-      Enabled using RL_USE_ENVIRONMENT_CONTEXT in rpmsg_config.h (in this folder)
-      When enabled the environment layer uses its own context.*/
-    struct rpmsg_lite_instance s_rpmsg_ctxt;
-    struct rpmsg_lite_ept_static_context s_ept_context;
-
     void *rx_buf;
 
     uint32_t len;
@@ -87,7 +81,6 @@ int main(void)
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, 
                                                 RPMSG_LITE_LINK_ID, 
                                                 RL_NO_FLAGS, 
-                                                &s_rpmsg_ctxt,
                                                 &debug);
  
    PRINTF("After rpmsg_lite_remote_init, ...BM , debug = 0x%x\r\n", debug);
@@ -111,8 +104,7 @@ int main(void)
     my_ept   = rpmsg_lite_create_ept(my_rpmsg, 
                                         LOCAL_EPT_ADDR,
                                         rpmsg_queue_rx_cb,
-                                        my_queue,
-                                        &s_ept_context);
+                                        my_queue);
     PRINTF("After rpmsg_lite_create_ept...BM \r\n");
 
     (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);

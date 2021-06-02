@@ -56,6 +56,8 @@ static void app_task(void *param)
     void *tx_buf;
     uint32_t size;
 
+    uint32_t debug = 0;
+
     /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...RTOS - by BTC...\r\n");
 
@@ -72,9 +74,12 @@ static void app_task(void *param)
     /* Signal the other core we are ready */
     (void)MCMGR_SignalReady(kMCMGR_Core1);
 #else
-    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
+    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
+                                             RPMSG_LITE_LINK_ID,
+                                             RL_NO_FLAGS,
+                                             &debug);
 
-    PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...RTOS \r\n");
+    PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...RTOS, debug is 0x%x \r\n", debug);
     
 #endif /* MCMGR_USED */
 
