@@ -113,8 +113,9 @@ struct rpmsg_lite_ept_static_context
     struct llist node;              /*!< memory for linked list node structure */
 };
 
-/*!,
-                                        &s_ept_context) stack and
+/*!
+ * Structure describing the local instance
+ * of RPMSG lite communication stack and
  * holds all runtime variables needed internally
  * by the stack.
  */
@@ -202,10 +203,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
                                                    uint32_t init_flags,
                                                    void *env_cfg);
 #else
-struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
-                                                    uint32_t link_id,
-                                                    uint32_t init_flags,
-                                                    uint32_t *debug);
+struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t link_id, uint32_t init_flags);
 #endif
 
 /*!
