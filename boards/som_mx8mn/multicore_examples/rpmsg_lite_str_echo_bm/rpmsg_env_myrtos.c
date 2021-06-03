@@ -95,10 +95,10 @@ int main(void)
     }
    PRINTF("After ready_cb, ...BM \r\n");
 */
-/*
+
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
         ;
- */   PRINTF("After rpmsg_lite_is_link_up  REMOVED...BM \r\n");
+    PRINTF("After rpmsg_lite_is_link_up  ...BM \r\n");
     
     my_queue = rpmsg_queue_create(my_rpmsg);
     PRINTF("After rpmsg_queue_create...BM \r\n");
