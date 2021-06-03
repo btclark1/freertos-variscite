@@ -1,0 +1,3 @@
+/home/btclark/var-fslc-yocto/local_repos/freertos-variscite/boards/som_mx8mn/multicore_examples/rpmsg_lite_str_echo_bm/armgcc/CMakeFiles/rebuild_cache.dir
+/home/btclark/var-fslc-yocto/local_repos/freertos-variscite/boards/som_mx8mn/multicore_examples/rpmsg_lite_str_echo_bm/armgcc/CMakeFiles/edit_cache.dir
+/home/btclark/var-fslc-yocto/local_repos/freertos-variscite/boards/som_mx8mn/multicore_examples/rpmsg_lite_str_echo_bm/armgcc/CMakeFiles/rpmsg_lite_str_echo_bm_imxcm7.elf.dir

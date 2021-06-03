@@ -1236,9 +1236,13 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
     }
 
     /* BTC - Check rpmsg_lite_dev->link_state to see if Master already set to 1 */
-    if(rpmsg_lite_dev->link_state == 1)
+    if(rpmsg_lite_dev->link_state == 0)
     {
         *debug |= 128;
+    }
+    if(rpmsg_lite_dev->link_state == 1)
+    {
+        *debug |= 256;
     }
 
 

@@ -1,0 +1,10 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/btclark/var-fslc-yocto/local_repos/freertos-variscite/devices/MIMX8MN6/gcc/startup_MIMX8MN6_cm7.S
+
