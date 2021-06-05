@@ -62,8 +62,6 @@ set(CMAKE_MODULE_PATH
 
 # include modules
 
-include(middleware_multicore_rpmsg_lite_MIMX8MN6)
-
 include(driver_clock_MIMX8MN6)
 
 include(driver_mu_MIMX8MN6)
