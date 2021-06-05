@@ -118,8 +118,9 @@ int main(void)
     BOARD_InitBootPins();
     BOARD_BootClockRUN();
     BOARD_InitDebugConsole();
-
+    
     copyResourceTable();
+
    /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo .... API Demo...BM - NOT MCMGR_USED- by BTC...\r\n");
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
@@ -167,7 +168,6 @@ int main(void)
         else
             PRINTF("Get Message From Master Side...BM  : \"%s\" [len : %d]\r\n", app_buf, len);
         
-
         /* Get tx buffer from RPMsg */
         tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
         assert(tx_buf);
