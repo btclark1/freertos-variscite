@@ -71,6 +71,9 @@ static void rpmsg_enable_rx_int(bool enable)
 
 int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *priv)
 {
+
+    PRINTF("\r\nIn rx_cb_function....\r\n");
+
     /*
      * Temperorily Disable  Receive Interrupt to avoid master
      * sending too many messages and remote will fail to keep pace
@@ -78,8 +81,7 @@ int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *
      */
     rpmsg_enable_rx_int(false);
 
-    PRINTF("\r\nIn rx_cb_function....\r\n");
-
+ 
 
     /* Hold the RPMsg rx buffer to be used in main loop */
 // ??    rpmsg_hold_rx_buffer(rp_chnl, data);
@@ -97,7 +99,7 @@ int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *
  */
 int main(void)
 {
-    rl_ept_rx_cb_t rx_cb_function = 0;
+    rl_ept_rx_cb_t cb = rx_cb_function;
 
     volatile uint32_t remote_addr;
     struct rpmsg_lite_endpoint *volatile my_ept;
@@ -143,7 +145,7 @@ int main(void)
 
     my_ept   = rpmsg_lite_create_ept(my_rpmsg, 
                                         LOCAL_EPT_ADDR,
-                                        rx_cb_function,                                        
+                                        cb,                                        
                                         app_msg);
                                         
     PRINTF("After rpmsg_lite_create_ept...BM .. my_ept = \r\n");
