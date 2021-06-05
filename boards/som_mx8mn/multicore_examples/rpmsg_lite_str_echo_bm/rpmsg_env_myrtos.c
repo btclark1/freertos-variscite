@@ -15,7 +15,7 @@ Bare-Metal
 #include "board.h"
 #include "fsl_debug_console.h"
 #include "fsl_uart.h"
-
+#include "rsc_table.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -122,6 +122,7 @@ int main(void)
     BOARD_BootClockRUN();
     BOARD_InitDebugConsole();
 
+    copyResourceTable();
    /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo .... API Demo...BM - NOT MCMGR_USED- by BTC...\r\n");
     my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
@@ -130,18 +131,14 @@ int main(void)
                                          &debug);
 
  
-    PRINTF("After env_init, ...BM ,  *my_rpmsg->sh_mem_base = 0x%x, debug = 0x%x\r\n",
+    PRINTF("After rpmsg_lite_remote_init, ...BM ,  *my_rpmsg->sh_mem_base = 0x%x, debug = 0x%x\r\n",
                                                      my_rpmsg->sh_mem_base, debug);   
-    
-    /* enable the interupt here? */
-    env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
     
     debug = 0;
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
-    ;
-    //{
-    //    debug++;
-    //}
+    {
+        debug++;
+    }
     PRINTF("After rpmsg_lite_is_link_up  ...BM loops = %d\r\n", debug);
 
     my_ept   = rpmsg_lite_create_ept(my_rpmsg, 
