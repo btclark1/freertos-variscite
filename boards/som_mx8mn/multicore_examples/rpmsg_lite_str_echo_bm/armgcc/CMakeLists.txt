@@ -35,6 +35,8 @@ add_executable(${MCUX_SDK_PROJECT_NAME}
 "${ProjDirPath}/../pin_mux.c"
 "${ProjDirPath}/../pin_mux.h"
 "${ProjDirPath}/../rpmsg_config.h"
+"${ProjDirPath}/../rsc_table.c"
+"${ProjDirPath}/../rsc_table.h"
 "${ProjDirPath}/../remoteproc.h"
 "${ProjDirPath}/../board.c"
 "${ProjDirPath}/../board.h"
@@ -45,7 +47,7 @@ add_executable(${MCUX_SDK_PROJECT_NAME}
 
 target_include_directories(${MCUX_SDK_PROJECT_NAME} PRIVATE
     ${ProjDirPath}/.. debug
-    ${ProjDirPath}/.. ddr_debug
+    ${ProjDirPath}/.. debug
     ${ProjDirPath}/..
 )
 
@@ -61,6 +63,7 @@ set(CMAKE_MODULE_PATH
 )
 
 # include modules
+include(middleware_multicore_rpmsg_lite_MIMX8MN6)
 
 include(driver_clock_MIMX8MN6)
 
@@ -89,7 +92,6 @@ include(device_MIMX8MN6_startup_MIMX8MN6)
 
 include(utility_assert_MIMX8MN6)
 
-include(middleware_multicore_rpmsg_lite_MIMX8MN6)
 
 include(CMSIS_Include_core_cm7_MIMX8MN6)
 
