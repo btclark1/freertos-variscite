@@ -9,7 +9,7 @@ Bare-Metal
 #include "rpmsg_env.h"
 #include "rpmsg_lite.h"
 #include "rpmsg_ns.h"
-//#include "virtqueue.h"
+
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
@@ -78,6 +78,9 @@ int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *
      */
     rpmsg_enable_rx_int(false);
 
+    PRINTF("\r\nIn rx_cb_function....\r\n");
+
+
     /* Hold the RPMsg rx buffer to be used in main loop */
 // ??    rpmsg_hold_rx_buffer(rp_chnl, data);
     app_msg[handler_idx].src = src;
@@ -94,15 +97,10 @@ int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *
  */
 int main(void)
 {
-    rl_ept_rx_cb_t rx_cb = rx_cb_function;
+    rl_ept_rx_cb_t rx_cb_function = 0;
 
     volatile uint32_t remote_addr;
     struct rpmsg_lite_endpoint *volatile my_ept;
-    
-   
-   
-    void *rx_cb_data;
-    void *rx_buf;
 
     uint32_t len;
     int32_t result;
@@ -132,8 +130,8 @@ int main(void)
                                          &debug);
 
  
-    PRINTF("After env_init, ...BM , debug = 0x%x\r\n", debug);
-   
+    PRINTF("After env_init, ...BM ,  *my_rpmsg->sh_mem_base = 0x%x, debug = 0x%x\r\n",
+                                                     my_rpmsg->sh_mem_base, debug);   
     debug = 0;
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
     {
