@@ -38,9 +38,9 @@ typedef struct
     int len;
 } app_message_t;
 
-static app_message_t app_msg[STRING_BUFFER_CNT];
-static char app_buf[512]; /* Each RPMSG buffer can carry less than 512 payload */
-static uint8_t app_idx = 0;
+static app_message_t rx_msg[STRING_BUFFER_CNT]; /* Recieve message */
+static char app_buf[512];                       /* Each RPMSG buffer can carry less than 512 payload */
+
 static uint8_t handler_idx = 0;
 static volatile int32_t msg_count = 0;
 
@@ -71,9 +71,6 @@ static void rpmsg_enable_rx_int(bool enable)
 
 int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *priv)
 {
-
-    PRINTF("\r\nIn rx_cb_function....\r\n");
-
     /*
      * Temperorily Disable  Receive Interrupt to avoid master
      * sending too many messages and remote will fail to keep pace
@@ -81,13 +78,11 @@ int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *
      */
     rpmsg_enable_rx_int(false);
 
- 
-
     /* Hold the RPMsg rx buffer to be used in main loop */
 // ??    rpmsg_hold_rx_buffer(rp_chnl, data);
-    app_msg[handler_idx].src = src;
-    app_msg[handler_idx].data = payload;
-    app_msg[handler_idx].len = payload_len;
+    rx_msg[handler_idx].src = src;
+    rx_msg[handler_idx].data = payload;
+    rx_msg[handler_idx].len = payload_len;
 
     /* Move to next free message index */
     handler_idx = (handler_idx + 1) % STRING_BUFFER_CNT;
@@ -103,9 +98,9 @@ int main(void)
 
     volatile uint32_t remote_addr;
     struct rpmsg_lite_endpoint *volatile my_ept;
-
-    uint32_t len;
-    int32_t result;
+    register uint8_t rx_idx = 0;
+    register uint32_t len;
+    register int32_t result;
     void *tx_buf;
     uint32_t size;
 
@@ -132,7 +127,6 @@ int main(void)
                                          RL_NO_FLAGS,
                                          &debug);
 
- 
     PRINTF("After rpmsg_lite_remote_init, ...BM ,  *my_rpmsg->sh_mem_base = 0x%x, debug = 0x%x\r\n",
                                                      my_rpmsg->sh_mem_base, debug);   
     
@@ -146,9 +140,9 @@ int main(void)
     my_ept   = rpmsg_lite_create_ept(my_rpmsg, 
                                         LOCAL_EPT_ADDR,
                                         cb,                                        
-                                        app_msg);
+                                        rx_msg);
                                         
-    PRINTF("After rpmsg_lite_create_ept...BM .. my_ept = \r\n");
+    PRINTF("After rpmsg_lite_create_ept...BM .. my_ept->addr = 0x%x\r\n", my_ept->addr);
 
     (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
 
@@ -160,11 +154,11 @@ int main(void)
         while (msg_count == 0)
         {}
      
-        len = app_msg[app_idx].len;
+        len = rx_msg[rx_idx].len;
         assert(len < sizeof(app_buf));
         
         /* Copy string from RPMsg rx buffer */
-        memcpy(app_buf, app_msg[app_idx].data, len);
+        memcpy(app_buf, rx_msg[rx_idx].data, len);
         app_buf[len] = 0; /* End string by '\0' */
  
         /* BTC Remove printfs so they are not included in throughput test */        
@@ -183,13 +177,15 @@ int main(void)
         result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, tx_buf, len);
         if (result != 0)
         {
+            PRINTF("Failed rpmsg_lite_send_nocopy...BM . result = %d\r\n", result);
             assert(false);
         }
  
-        result =  rpmsg_lite_release_rx_buffer(my_rpmsg, app_msg[app_idx].data);
-        app_idx = (app_idx + 1) % STRING_BUFFER_CNT;
+        result =  rpmsg_lite_release_rx_buffer(my_rpmsg, rx_msg[rx_idx].data);
+        rx_idx = (rx_idx + 1) % STRING_BUFFER_CNT;
         if (result != 0)
         {
+            PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . result = %d\r\n", result);
             assert(false);
         }
 
