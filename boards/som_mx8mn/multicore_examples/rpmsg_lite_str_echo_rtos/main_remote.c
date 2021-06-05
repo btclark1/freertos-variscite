@@ -79,7 +79,7 @@ static void app_task(void *param)
                                              RL_NO_FLAGS,
                                              &debug);
 
-    PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...RTOS, *my_rpmsg->sh_mem_base = %d, debug = 0x%x\r\n",
+    PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...RTOS, *my_rpmsg->sh_mem_base = 0x%x, debug = 0x%x\r\n",
                                                      my_rpmsg->sh_mem_base,
                                                      debug);
     

@@ -21,7 +21,6 @@ SET(ProjDirPath ${CMAKE_CURRENT_SOURCE_DIR})
 SET(EXECUTABLE_OUTPUT_PATH ${ProjDirPath}/${CMAKE_BUILD_TYPE})
 SET(LIBRARY_OUTPUT_PATH ${ProjDirPath}/${CMAKE_BUILD_TYPE})
 
-
 project(rpmsg_lite_str_echo_bm_imxcm7)
 
 set(MCUX_SDK_PROJECT_NAME rpmsg_lite_str_echo_bm_imxcm7.elf)
@@ -32,12 +31,10 @@ include(${ProjDirPath}/config.cmake)
 
 add_executable(${MCUX_SDK_PROJECT_NAME} 
 "${ProjDirPath}/../rpmsg_env_myrtos.c"
-"${ProjDirPath}/../FreeRTOSConfig.h"
+"${ProjDirPath}/../../../../../middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/platform/imx8mn_m7/rpmsg_platform.c"
 "${ProjDirPath}/../pin_mux.c"
 "${ProjDirPath}/../pin_mux.h"
 "${ProjDirPath}/../rpmsg_config.h"
-"${ProjDirPath}/../rsc_table.c"
-"${ProjDirPath}/../rsc_table.h"
 "${ProjDirPath}/../remoteproc.h"
 "${ProjDirPath}/../board.c"
 "${ProjDirPath}/../board.h"
@@ -48,13 +45,12 @@ add_executable(${MCUX_SDK_PROJECT_NAME}
 
 target_include_directories(${MCUX_SDK_PROJECT_NAME} PRIVATE
     ${ProjDirPath}/.. debug
-    ${ProjDirPath}/.. debug
+    ${ProjDirPath}/.. ddr_debug
     ${ProjDirPath}/..
 )
 
 set(CMAKE_MODULE_PATH
     ${ProjDirPath}/../../../../../middleware/multicore
-    ${ProjDirPath}/../../../../../rtos/freertos
     ${ProjDirPath}/../../../../../devices/MIMX8MN6/drivers
     ${ProjDirPath}/../../../../../devices/MIMX8MN6
     ${ProjDirPath}/../../../../../devices/MIMX8MN6/utilities
@@ -65,15 +61,13 @@ set(CMAKE_MODULE_PATH
 )
 
 # include modules
-include(middleware_multicore_rpmsg_lite_imx8mn_m7_freertos_MIMX8MN6)
 
-include(middleware_freertos-kernel_heap_4_MIMX8MN6)
+include(middleware_multicore_rpmsg_lite_MIMX8MN6)
 
 include(driver_clock_MIMX8MN6)
 
 include(driver_mu_MIMX8MN6)
 
-include(middleware_freertos-kernel_MIMX8MN6)
 
 include(driver_common_MIMX8MN6)
 
@@ -98,8 +92,6 @@ include(device_MIMX8MN6_startup_MIMX8MN6)
 include(utility_assert_MIMX8MN6)
 
 include(middleware_multicore_rpmsg_lite_MIMX8MN6)
-
-include(middleware_freertos-kernel_extension_MIMX8MN6)
 
 include(CMSIS_Include_core_cm7_MIMX8MN6)
 

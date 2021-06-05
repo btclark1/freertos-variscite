@@ -7,20 +7,15 @@ Bare-Metal
 #include <string.h>
 
 #include "rpmsg_env.h"
-
-/*
 #include "rpmsg_lite.h"
-#include "rpmsg_queue.h"
 #include "rpmsg_ns.h"
-*/
+//#include "virtqueue.h"
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
 #include "fsl_debug_console.h"
-
-
 #include "fsl_uart.h"
-#include "rsc_table.h"
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -33,7 +28,23 @@ Bare-Metal
 #endif
 
 /* Globals */
+
+#define STRING_BUFFER_CNT 3
+
+typedef struct
+{
+    unsigned long src;
+    void* data;
+    int len;
+} app_message_t;
+
+static app_message_t app_msg[STRING_BUFFER_CNT];
 static char app_buf[512]; /* Each RPMSG buffer can carry less than 512 payload */
+static uint8_t app_idx = 0;
+static uint8_t handler_idx = 0;
+static volatile int32_t msg_count = 0;
+
+struct rpmsg_lite_instance *volatile my_rpmsg;
 
 /*******************************************************************************
  * Prototypes
@@ -43,17 +54,54 @@ static char app_buf[512]; /* Each RPMSG buffer can carry less than 512 payload *
  * Code
  ******************************************************************************/
 
+static void rpmsg_enable_rx_int(bool enable)
+{
+    if (enable)
+    {
+        if ((--msg_count) == 0)
+            env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+    }
+    else
+    {
+        if ((msg_count++) == 0)
+            env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+
+    }
+}
+
+int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *priv)
+{
+    /*
+     * Temperorily Disable  Receive Interrupt to avoid master
+     * sending too many messages and remote will fail to keep pace
+     * to consume (flow control)
+     */
+    rpmsg_enable_rx_int(false);
+
+    /* Hold the RPMsg rx buffer to be used in main loop */
+// ??    rpmsg_hold_rx_buffer(rp_chnl, data);
+    app_msg[handler_idx].src = src;
+    app_msg[handler_idx].data = payload;
+    app_msg[handler_idx].len = payload_len;
+
+    /* Move to next free message index */
+    handler_idx = (handler_idx + 1) % STRING_BUFFER_CNT;
+
+    return(0);
+}
 /*!
  * @brief Main function
  */
 int main(void)
 {
+    rl_ept_rx_cb_t rx_cb = rx_cb_function;
 
     volatile uint32_t remote_addr;
     struct rpmsg_lite_endpoint *volatile my_ept;
-    volatile rpmsg_queue_handle my_queue;
-    struct rpmsg_lite_instance *volatile my_rpmsg;
     
+   
+   
+    void *rx_cb_data;
     void *rx_buf;
 
     uint32_t len;
@@ -62,6 +110,7 @@ int main(void)
     uint32_t size;
 
     uint32_t debug = 0;
+
 
     /* Initialize standard SDK demo application pins */
     /* M7 has its local cache and enabled by default,
@@ -74,41 +123,30 @@ int main(void)
     BOARD_InitBootPins();
     BOARD_BootClockRUN();
     BOARD_InitDebugConsole();
-    copyResourceTable();
 
-    /* Print the initial banner */
-    PRINTF("\r\nRPMSG String Echo .... API Demo...BM - by BTC...\r\n");
+   /* Print the initial banner */
+    PRINTF("\r\nRPMSG String Echo .... API Demo...BM - NOT MCMGR_USED- by BTC...\r\n");
+    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
+                                         RPMSG_LITE_LINK_ID,
+                                         RL_NO_FLAGS,
+                                         &debug);
 
-    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, 
-                                                RPMSG_LITE_LINK_ID, 
-                                                RL_NO_FLAGS, 
-                                                &debug);
  
-   PRINTF("After rpmsg_lite_remote_init, ...BM , *my_rpmsg->sh_mem_base = %d, debug = 0x%x\r\n",
-                                                     my_rpmsg->sh_mem_base,
-                                                     debug);
+    PRINTF("After env_init, ...BM , debug = 0x%x\r\n", debug);
    
-    /* Signal the other core we are ready */
-/*    if (ready_cb != NULL)
-    {
-        PRINTF("Calling ready_cb ...BM \r\n");
-        ready_cb();
-    }
-   PRINTF("After ready_cb, ...BM \r\n");
-*/
-
+    debug = 0;
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
-        ;
-    PRINTF("After rpmsg_lite_is_link_up  ...BM \r\n");
-    
-    my_queue = rpmsg_queue_create(my_rpmsg);
-    PRINTF("After rpmsg_queue_create...BM \r\n");
+    {
+        debug++;
+    }
+    PRINTF("After rpmsg_lite_is_link_up  ...BM loops = %d\r\n", debug);
 
     my_ept   = rpmsg_lite_create_ept(my_rpmsg, 
                                         LOCAL_EPT_ADDR,
-                                        rpmsg_queue_rx_cb,
-                                        my_queue);
-    PRINTF("After rpmsg_lite_create_ept...BM \r\n");
+                                        rx_cb_function,                                        
+                                        app_msg);
+                                        
+    PRINTF("After rpmsg_lite_create_ept...BM .. my_ept = \r\n");
 
     (void)rpmsg_ns_announce(my_rpmsg, my_ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
 
@@ -116,21 +154,18 @@ int main(void)
 
     for (;;)
     {
-        /* Get RPMsg rx buffer with message */
-        result =
-            rpmsg_queue_recv_nocopy(my_rpmsg, my_queue, (uint32_t *)&remote_addr, (char **)&rx_buf, &len, RL_BLOCK);
-        if (result != 0)
-        {
-            assert(false);
-        }
-
-        /* Copy string from RPMsg rx buffer */
+        /* Wait for message to be available */
+        while (msg_count == 0)
+        {}
+     
+        len = app_msg[app_idx].len;
         assert(len < sizeof(app_buf));
-        memcpy(app_buf, rx_buf, len);
-        app_buf[len] = 0; /* End string by '\0' */
-
-        /* BTC Remove printfs so they are not included in throughput test */
         
+        /* Copy string from RPMsg rx buffer */
+        memcpy(app_buf, app_msg[app_idx].data, len);
+        app_buf[len] = 0; /* End string by '\0' */
+ 
+        /* BTC Remove printfs so they are not included in throughput test */        
         if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
             PRINTF("Get New Line From Master Side...BM \r\n");
         else
@@ -148,14 +183,15 @@ int main(void)
         {
             assert(false);
         }
-        /* Release held RPMsg rx buffer */
-        result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
+ 
+        result =  rpmsg_lite_release_rx_buffer(my_rpmsg, app_msg[app_idx].data);
+        app_idx = (app_idx + 1) % STRING_BUFFER_CNT;
         if (result != 0)
         {
             assert(false);
         }
+
+        /* Once a message is consumed, minus the msg_count and might enable interrupt again */
+        rpmsg_enable_rx_int(true);
     }
 }
-
-
-
