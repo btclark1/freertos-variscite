@@ -58,16 +58,22 @@ static void rpmsg_enable_rx_int(bool enable)
 {
     if (enable)
     {
+        /* no flow control
         --msg_count;
-//        if ((--msg_count) == 0)
-  //          env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+        */
+        /* yes to flow control*/
+        if ((--msg_count) == 0)
+            env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
     }
     else
     {
+        /* no flow control
         msg_count++;
-//        if ((msg_count++) == 0)
-  //          //env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
-
+        */
+        /* yes to flow control */
+        if ((msg_count++) == 0)
+            env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+        
     }
     PRINTF("In rpmsg_enable_rx_int...BM.. msg_count = %d\r\n", msg_count);
 }
@@ -99,7 +105,6 @@ int main(void)
 {
     rl_ept_rx_cb_t cb = rx_cb_function;
 
-    volatile uint32_t remote_addr;
     struct rpmsg_lite_endpoint *volatile my_ept;
     register uint8_t rx_idx = 0;
     register uint32_t len;
@@ -167,9 +172,10 @@ int main(void)
  
         /* BTC Remove printfs so they are not included in throughput test */        
         if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
-            PRINTF("Get New Line From Master Side...BM \r\n");
+            PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
         else
-            PRINTF("Get Message From Master Side...BM  : \"%s\" [len : %d]\r\n", app_buf, len);
+            PRINTF("Get Message From Master Side...BM.. rx_msg[rx_idx].src = 0x%x  : \"%s\" [len : %d]\r\n",
+                                                        rx_msg[rx_idx].src, app_buf, len);
         
         /* Get tx buffer from RPMsg */
         tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
@@ -177,7 +183,7 @@ int main(void)
         /* Copy string to RPMsg tx buffer */
         memcpy(tx_buf, app_buf, len);
         /* Echo back received message with nocopy send */
-        result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, tx_buf, len);
+        result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, tx_buf, len);
         if (result != 0)
         {
             PRINTF("Failed rpmsg_lite_send_nocopy...BM . result = %d\r\n", result);
