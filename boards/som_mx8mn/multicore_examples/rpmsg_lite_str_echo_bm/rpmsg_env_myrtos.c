@@ -59,14 +59,15 @@ static void rpmsg_enable_rx_int(bool enable)
     if (enable)
     {
         if ((--msg_count) == 0)
-            env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+            //env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
     }
     else
     {
         if ((msg_count++) == 0)
-            env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+            //env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
 
     }
+    PRINTF("In rpmsg_enable_rx_int...BM.. msg_count = %d\r\n", msg_count);
 }
 
 int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *priv)
@@ -76,7 +77,7 @@ int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *
      * sending too many messages and remote will fail to keep pace
      * to consume (flow control)
      */
-//    rpmsg_enable_rx_int(false);
+    rpmsg_enable_rx_int(false);
 
     /* Hold the RPMsg rx buffer to be used in main loop */
 // ??    rpmsg_hold_rx_buffer(rp_chnl, data);
@@ -190,6 +191,6 @@ int main(void)
         }
 
         /* Once a message is consumed, minus the msg_count and might enable interrupt again */
- //       rpmsg_enable_rx_int(true);
+        rpmsg_enable_rx_int(true);
     }
 }
