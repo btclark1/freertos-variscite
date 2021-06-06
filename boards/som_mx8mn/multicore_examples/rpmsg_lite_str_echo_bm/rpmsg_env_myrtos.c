@@ -58,13 +58,15 @@ static void rpmsg_enable_rx_int(bool enable)
 {
     if (enable)
     {
-        if ((--msg_count) == 0)
-            //env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+        --msg_count;
+//        if ((--msg_count) == 0)
+  //          env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
     }
     else
     {
-        if ((msg_count++) == 0)
-            //env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+        msg_count++;
+//        if ((msg_count++) == 0)
+  //          //env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
 
     }
     PRINTF("In rpmsg_enable_rx_int...BM.. msg_count = %d\r\n", msg_count);
