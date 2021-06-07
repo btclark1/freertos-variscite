@@ -62,7 +62,9 @@
 //! [2^n - 16].
 //! The default value is 496U.
 #ifndef RL_BUFFER_PAYLOAD_SIZE
-#define RL_BUFFER_PAYLOAD_SIZE (496U)
+/* BTC - Orig #define RL_BUFFER_PAYLOAD_SIZE (496U)
+                         32768 - 16 = 32752 **/
+#define RL_BUFFER_PAYLOAD_SIZE (32752U)
 #endif
 
 //! @def RL_BUFFER_COUNT

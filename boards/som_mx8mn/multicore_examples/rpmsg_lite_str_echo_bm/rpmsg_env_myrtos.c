@@ -22,7 +22,6 @@ Bare-Metal
 #define RPMSG_LITE_SHMEM_BASE         (VDEV0_VRING_BASE)
 #define RPMSG_LITE_LINK_ID            (RL_PLATFORM_IMX8MN_M7_USER_LINK_ID)
 #define RPMSG_LITE_NS_ANNOUNCE_STRING "rpmsg-virtual-tty-channel-1"
-#define APP_TASK_STACK_SIZE (256)
 #ifndef LOCAL_EPT_ADDR
 #define LOCAL_EPT_ADDR (30)
 #endif
@@ -39,7 +38,8 @@ typedef struct
 } app_message_t;
 
 static app_message_t rx_msg[STRING_BUFFER_CNT]; /* Recieve message */
-static char app_buf[512];                       /* Each RPMSG buffer can carry less than 512 payload */
+/* static char app_buf[512]; */                      /* Each RPMSG buffer can carry less than 512 payload */
+static char app_buf[32768];                       /* Each RPMSG buffer can carry less than 512 payload */
 
 static uint8_t handler_idx = 0;
 static volatile int32_t msg_count = 0;

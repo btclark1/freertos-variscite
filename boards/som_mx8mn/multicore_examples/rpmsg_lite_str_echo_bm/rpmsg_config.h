@@ -31,7 +31,9 @@
 //! Size of the buffer payload, it must be equal to (240, 496, 1008, ...)
 //! [2^n - 16].
 //! The default value is 496U.
-#define RL_BUFFER_PAYLOAD_SIZE (496U)
+/* BTC - Orig #define RL_BUFFER_PAYLOAD_SIZE (496U)
+                    32768 - 16 = 32752 **/
+#define RL_BUFFER_PAYLOAD_SIZE (32752U)
 
 //! @def RL_BUFFER_COUNT
 //!
