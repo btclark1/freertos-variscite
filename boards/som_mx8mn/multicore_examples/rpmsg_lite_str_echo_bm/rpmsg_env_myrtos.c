@@ -165,7 +165,7 @@ int main(void)
         {}
      
         len = rx_msg[rx_idx].len;
-        if (len > sizeof(app_buf)
+        if (len > sizeof(app_buf))
         {
             printf(" Length of message recieved from A53 larger than M7 app_buf buffer, chopping to sizeof(app_buf) = %d and sending back",
                              sizeof(app_buf);
