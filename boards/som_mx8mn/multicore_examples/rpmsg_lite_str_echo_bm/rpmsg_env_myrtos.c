@@ -39,7 +39,7 @@ typedef struct
 
 static app_message_t rx_msg[STRING_BUFFER_CNT]; /* Recieve message */
 /* static char app_buf[512]; */                      /* Each RPMSG buffer can carry less than 512 payload */
-static char app_buf[2048];                       /* Each RPMSG buffer can carry less than 512 payload */
+static char app_buf[32768];                       /* Each RPMSG buffer can carry less than 512 payload */
 
 static uint8_t handler_idx = 0;
 static volatile int32_t msg_count = 0;
@@ -172,7 +172,7 @@ int main(void)
         app_buf[len] = 0; /* End string by '\0' */
  
         byte_cnt += len;
-        if(byte_cnt > 0x4000)
+        if(byte_cnt > 0x100000)
         {
         
             /* Get tx buffer from RPMsg */
@@ -189,7 +189,7 @@ int main(void)
                 assert(false);
             }
 
-                       /* BTC Remove printfs so they are not included in throughput test */        
+            /* BTC Remove printfs so they are not included in throughput test */        
             if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
                 PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
             else

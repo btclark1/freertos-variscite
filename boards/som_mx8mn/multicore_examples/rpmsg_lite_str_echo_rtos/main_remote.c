@@ -33,7 +33,7 @@
 #endif
 
 /* Globals */
-static char app_buf[65536]; /* Each RPMSG buffer can carry less than 512 payload */
+static char app_buf[32768]; /* Each RPMSG buffer can carry less than 512 payload */
 
 /*******************************************************************************
  * Prototypes
@@ -58,12 +58,7 @@ static void app_task(void *param)
 
     uint32_t debug = 0;
 
-
-#define ROUND_ROBIN_TEST 0
-
-#ifndef ROUND_ROBIN_TEST
-    uint32_t bytes_rec = 0;
-#endif
+    uint32_t byte_cnt = 0;
 
     /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...RTOS - by BTC...\r\n");
@@ -125,47 +120,36 @@ static void app_task(void *param)
         memcpy(app_buf, rx_buf, len);
         app_buf[len] = 0; /* End string by '\0' */
 
-        /* BTC Remove printfs so they are not included in throughput test */
-     /*   
-        if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
-            PRINTF("Get New Line From Master Side...RTOS \r\n");
-        else
-            PRINTF("Get Message From Master Side...RTOS  : \"%s\" [len : %d]\r\n", app_buf, len);
-     */   
-
- 
-
-#ifdef ROUND_ROBIN_TEST
-        /* Get tx buffer from RPMsg */
-        tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
-        assert(tx_buf);
-        /* Copy string to RPMsg tx buffer */
-        memcpy(tx_buf, app_buf, len);
-        /* Echo back received message with nocopy send */
-        result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, tx_buf, len);
-        if (result != 0)
+        byte_cnt += len;
+        if(byte_cnt > 0x100000)
         {
-            assert(false);
-        }
-       /* Release held RPMsg rx buffer */
-        result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
-        if (result != 0)
-        {
-            assert(false);
-        }
- #else /* streaming test */
-        /* Keep track of the total bytes recieved, at 1MB, send 1 byte back to signal A53 */
-        bytes_rec += len;
-        if(bytes_rec > 1048576)
-        {
+            /* Get tx buffer from RPMsg */
+            tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
+            assert(tx_buf);
+            /* Copy string to RPMsg tx buffer */
+            memcpy(tx_buf, app_buf, len);
             /* Echo back received message with nocopy send */
-            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, "R", 2);
+            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, tx_buf, len);
             if (result != 0)
             {
                 assert(false);
             }
-        }    
-#endif   
+            /* Release held RPMsg rx buffer */
+            result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
+            if (result != 0)
+            {
+                assert(false);
+            }
+
+            /* BTC Remove printfs so they are not included in throughput test */        
+            if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
+                PRINTF("Get New Line From Master Side...RTOS \r\n");
+            else
+                PRINTF("Get Message From Master Side...RTOS.. : [len : %d], size = %d, byte_cnt = %d\r\n",
+                                                  len, size, byte_cnt);
+            byte_cnt = 0;
+
+        }
     }
 }
 
