@@ -39,7 +39,7 @@ typedef struct
 
 static app_message_t rx_msg[STRING_BUFFER_CNT]; /* Recieve message */
 /* static char app_buf[512]; */                      /* Each RPMSG buffer can carry less than 512 payload */
-static char app_buf[65536];                       /* Each RPMSG buffer can carry less than 512 payload */
+static char app_buf[2048];                       /* Each RPMSG buffer can carry less than 512 payload */
 
 static uint8_t handler_idx = 0;
 static volatile int32_t msg_count = 0;
@@ -58,22 +58,23 @@ static void rpmsg_enable_rx_int(bool enable)
 {
     if (enable)
     {
-        /* no flow control
+        /* no flow control */
         --msg_count;
-        */
+        
         /* yes to flow control*/
-        if ((--msg_count) == 0)
+/*        if ((--msg_count) == 0)
             env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+*/
     }
     else
     {
-        /* no flow control
+        /* no flow control */
         msg_count++;
-        */
-        /* yes to flow control */
-        if ((msg_count++) == 0)
-            env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
         
+        /* yes to flow control */
+/*        if ((msg_count++) == 0)
+            env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+*/        
     }
     /* PRINTF("In rpmsg_enable_rx_int...BM.. msg_count = %d\r\n", msg_count);*/
 }
@@ -164,8 +165,12 @@ int main(void)
         {}
      
         len = rx_msg[rx_idx].len;
-        assert(len < sizeof(app_buf));
-        
+        if (len > sizeof(app_buf)
+        {
+            printf(" Length of message recieved from A53 larger than M7 app_buf buffer, chopping to sizeof(app_buf) = %d and sending back",
+                             sizeof(app_buf);
+            len = sizeof(app_buf);
+        }
         /* Copy string from RPMsg rx buffer */
         memcpy(app_buf, rx_msg[rx_idx].data, len);
         app_buf[len] = 0; /* End string by '\0' */
