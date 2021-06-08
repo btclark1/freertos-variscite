@@ -59,22 +59,21 @@ static void rpmsg_enable_rx_int(bool enable)
     if (enable)
     {
         /* no flow control */
-        --msg_count;
+        /*--msg_count; */
         
         /* yes to flow control*/
-/*        if ((--msg_count) == 0)
+        if ((--msg_count) == 0)
             env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
-*/
+
     }
     else
     {
         /* no flow control */
-        msg_count++;
+        /*msg_count++; */
         
         /* yes to flow control */
-/*        if ((msg_count++) == 0)
+        if ((msg_count++) == 0)
             env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
-*/        
     }
     /* PRINTF("In rpmsg_enable_rx_int...BM.. msg_count = %d\r\n", msg_count);*/
 }
