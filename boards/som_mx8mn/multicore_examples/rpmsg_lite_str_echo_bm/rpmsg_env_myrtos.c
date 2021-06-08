@@ -185,13 +185,14 @@ int main(void)
             PRINTF("Get Message From Master Side...BM.. rx_msg[rx_idx].src = 0x%x  : [len : %d]\r\n",
                                                         rx_msg[rx_idx].src, len);
        */ 
+
+#ifdef ROUND_ROBIN_TEST
         /* Get tx buffer from RPMsg */
         tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
         assert(tx_buf);
         /* Copy string to RPMsg tx buffer */
         memcpy(tx_buf, app_buf, len);
 
-#ifdef ROUND_ROBIN_TEST
         /* Echo back received message with nocopy send */
         result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, tx_buf, len);
         if (result != 0)
@@ -199,12 +200,20 @@ int main(void)
             PRINTF("Failed rpmsg_lite_send_nocopy...BM . result = %d\r\n", result);
             assert(false);
         }
+        result =  rpmsg_lite_release_rx_buffer(my_rpmsg, rx_msg[rx_idx].data);
+
+        if (result != 0)
+        {
+            PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . result = %d\r\n", result);
+            assert(false);
+        }
+        
 #else /* streaming test */
         /* Keep track of the total bytes recieved, at 1MB, send 1 byte back to signal A53 */
         bytes_rec += len;
         if(bytes_rec > 1048576)
         {
-            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, "B", 1);
+            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, "B", 2);
             if (result != 0)
             {
                 PRINTF("Failed rpmsg_lite_send_nocopy...BM . result = %d\r\n", result);
@@ -213,13 +222,8 @@ int main(void)
             bytes_rec = 0;
         }
 #endif
-        result =  rpmsg_lite_release_rx_buffer(my_rpmsg, rx_msg[rx_idx].data);
+
         rx_idx = (rx_idx + 1) % STRING_BUFFER_CNT;
-        if (result != 0)
-        {
-            PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . result = %d\r\n", result);
-            assert(false);
-        }
         
         /* Once a message is consumed, minus the msg_count and might enable interrupt again */
         rpmsg_enable_rx_int(true);

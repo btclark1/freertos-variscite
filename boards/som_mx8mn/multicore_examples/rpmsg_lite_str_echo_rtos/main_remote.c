@@ -133,38 +133,39 @@ static void app_task(void *param)
             PRINTF("Get Message From Master Side...RTOS  : \"%s\" [len : %d]\r\n", app_buf, len);
      */   
 
+ 
+
+#ifdef ROUND_ROBIN_TEST
         /* Get tx buffer from RPMsg */
         tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
         assert(tx_buf);
         /* Copy string to RPMsg tx buffer */
         memcpy(tx_buf, app_buf, len);
-
-#ifdef ROUND_ROBIN_TEST
         /* Echo back received message with nocopy send */
         result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, tx_buf, len);
         if (result != 0)
         {
             assert(false);
         }
-#else /* streaming test */
+       /* Release held RPMsg rx buffer */
+        result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
+        if (result != 0)
+        {
+            assert(false);
+        }
+ #else /* streaming test */
         /* Keep track of the total bytes recieved, at 1MB, send 1 byte back to signal A53 */
         bytes_rec += len;
         if(bytes_rec > 1048576)
         {
             /* Echo back received message with nocopy send */
-            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, "R", 1);
+            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, "R", 2);
             if (result != 0)
             {
                 assert(false);
             }
         }    
 #endif   
-        /* Release held RPMsg rx buffer */
-        result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
-        if (result != 0)
-        {
-            assert(false);
-        }
     }
 }
 
