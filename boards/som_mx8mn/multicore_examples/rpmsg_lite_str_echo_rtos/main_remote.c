@@ -58,6 +58,13 @@ static void app_task(void *param)
 
     uint32_t debug = 0;
 
+
+#define ROUND_ROBIN_TEST 0
+
+#ifndef ROUND_ROBIN_TEST
+    uint32_t bytes_rec = 0;
+#endif
+
     /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...RTOS - by BTC...\r\n");
 
@@ -131,12 +138,27 @@ static void app_task(void *param)
         assert(tx_buf);
         /* Copy string to RPMsg tx buffer */
         memcpy(tx_buf, app_buf, len);
+
+#ifdef ROUND_ROBIN_TEST
         /* Echo back received message with nocopy send */
         result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, tx_buf, len);
         if (result != 0)
         {
             assert(false);
         }
+#else /* streaming test */
+        /* Keep track of the total bytes recieved, at 1MB, send 1 byte back to signal A53 */
+        bytes_rec += len;
+        if(bytes_rec > 1048576)
+        {
+            /* Echo back received message with nocopy send */
+            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, remote_addr, "R", 1);
+            if (result != 0)
+            {
+                assert(false);
+            }
+        }    
+#endif   
         /* Release held RPMsg rx buffer */
         result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
         if (result != 0)

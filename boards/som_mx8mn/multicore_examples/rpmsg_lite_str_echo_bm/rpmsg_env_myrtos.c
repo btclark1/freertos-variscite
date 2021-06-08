@@ -204,7 +204,7 @@ int main(void)
         bytes_rec += len;
         if(bytes_rec > 1048576)
         {
-            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, "1", 1);
+            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, "B", 1);
             if (result != 0)
             {
                 PRINTF("Failed rpmsg_lite_send_nocopy...BM . result = %d\r\n", result);
