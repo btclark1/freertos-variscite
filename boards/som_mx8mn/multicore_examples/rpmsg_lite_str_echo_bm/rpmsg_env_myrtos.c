@@ -58,22 +58,22 @@ static void rpmsg_enable_rx_int(bool enable)
 {
     if (enable)
     {
-        /* no flow control */
-        /*--msg_count; */
-        
+        /* no flow control
+        --msg_count;
+        */
         /* yes to flow control*/
         if ((--msg_count) == 0)
             env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
-
     }
     else
     {
-        /* no flow control */
-        /*msg_count++; */
-        
+        /* no flow control
+        msg_count++;
+        */
         /* yes to flow control */
         if ((msg_count++) == 0)
             env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
+        
     }
     /* PRINTF("In rpmsg_enable_rx_int...BM.. msg_count = %d\r\n", msg_count);*/
 }
@@ -114,11 +114,7 @@ int main(void)
 
     uint32_t debug = 0;
 
-#define ROUND_ROBIN_TEST 0
-
-#ifndef ROUND_ROBIN_TEST
-    uint32_t bytes_rec = 0;
-#endif
+    uint32_t byte_cnt = 0;
 
     /* Initialize standard SDK demo application pins */
     /* M7 has its local cache and enabled by default,
@@ -169,62 +165,48 @@ int main(void)
         {}
      
         len = rx_msg[rx_idx].len;
-        if (len > sizeof(app_buf))
-        {
-            printf(" Length of message recieved from A53 larger than M7 app_buf buffer, chopping to sizeof(app_buf) = %d and sending back",sizeof(app_buf));
-            len = sizeof(app_buf);
-        }
+        assert(len < sizeof(app_buf));
+        
         /* Copy string from RPMsg rx buffer */
         memcpy(app_buf, rx_msg[rx_idx].data, len);
         app_buf[len] = 0; /* End string by '\0' */
  
-        /* BTC Remove printfs so they are not included in throughput test */        
-     /*   if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
-            PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
-        else
-            PRINTF("Get Message From Master Side...BM.. rx_msg[rx_idx].src = 0x%x  : [len : %d]\r\n",
-                                                        rx_msg[rx_idx].src, len);
-       */ 
-
-#ifdef ROUND_ROBIN_TEST
-        /* Get tx buffer from RPMsg */
-        tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
-        assert(tx_buf);
-        /* Copy string to RPMsg tx buffer */
-        memcpy(tx_buf, app_buf, len);
-
-        /* Echo back received message with nocopy send */
-        result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, tx_buf, len);
-        if (result != 0)
+        byte_cnt += len;
+        if(byte_cnt > 0x4000)
         {
-            PRINTF("Failed rpmsg_lite_send_nocopy...BM . result = %d\r\n", result);
-            assert(false);
-        }
-        result =  rpmsg_lite_release_rx_buffer(my_rpmsg, rx_msg[rx_idx].data);
-
-        if (result != 0)
-        {
-            PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . result = %d\r\n", result);
-            assert(false);
-        }
         
-#else /* streaming test */
-        /* Keep track of the total bytes recieved, at 1MB, send 1 byte back to signal A53 */
-        bytes_rec += len;
-        if(bytes_rec > 1048576)
-        {
-            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, "B", 2);
+            /* Get tx buffer from RPMsg */
+            tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
+            assert(tx_buf);
+        
+             /* Copy string to RPMsg tx buffer */
+            memcpy(tx_buf, app_buf, len);
+            /* Echo back received message with nocopy send */
+            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, tx_buf, len);
             if (result != 0)
             {
                 PRINTF("Failed rpmsg_lite_send_nocopy...BM . result = %d\r\n", result);
                 assert(false);
             }
-            bytes_rec = 0;
-        }
-#endif
 
+                       /* BTC Remove printfs so they are not included in throughput test */        
+            if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
+                PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
+            else
+                PRINTF("Get Message From Master Side...BM.. rx_msg[rx_idx].src = 0x%x  : [len : %d], size = %d, byte_cnt = %d\r\n",
+                                                  rx_msg[rx_idx].src, len, size, byte_cnt);
+            byte_cnt = 0;
+
+        } 
+        result =  rpmsg_lite_release_rx_buffer(my_rpmsg, rx_msg[rx_idx].data);
         rx_idx = (rx_idx + 1) % STRING_BUFFER_CNT;
-        
+        if (result != 0)
+        {
+            PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . result = %d\r\n", result);
+            assert(false);
+        }
+
+
         /* Once a message is consumed, minus the msg_count and might enable interrupt again */
         rpmsg_enable_rx_int(true);
     }
