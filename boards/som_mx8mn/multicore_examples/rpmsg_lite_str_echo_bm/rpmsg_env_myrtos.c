@@ -171,12 +171,12 @@ int main(void)
         app_buf[len] = 0; /* End string by '\0' */
  
         /* BTC Remove printfs so they are not included in throughput test */        
-        if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
+     /*   if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
             PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
         else
             PRINTF("Get Message From Master Side...BM.. rx_msg[rx_idx].src = 0x%x  : \"%s\" [len : %d]\r\n",
                                                         rx_msg[rx_idx].src, app_buf, len);
-        
+      */  
         /* Get tx buffer from RPMsg */
         tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
         assert(tx_buf);
