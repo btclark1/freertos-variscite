@@ -39,7 +39,7 @@ typedef struct
 
 static app_message_t rx_msg[STRING_BUFFER_CNT]; /* Recieve message */
 /* static char app_buf[512]; */                      /* Each RPMSG buffer can carry less than 512 payload */
-static char app_buf[32768];                       /* Each RPMSG buffer can carry less than 512 payload */
+static char app_buf[65536];                       /* Each RPMSG buffer can carry less than 512 payload */
 
 static uint8_t handler_idx = 0;
 static volatile int32_t msg_count = 0;
@@ -75,7 +75,7 @@ static void rpmsg_enable_rx_int(bool enable)
             env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
         
     }
-    PRINTF("In rpmsg_enable_rx_int...BM.. msg_count = %d\r\n", msg_count);
+    /* PRINTF("In rpmsg_enable_rx_int...BM.. msg_count = %d\r\n", msg_count);*/
 }
 
 int32_t rx_cb_function(void *payload, uint32_t payload_len, uint32_t src, void *priv)
