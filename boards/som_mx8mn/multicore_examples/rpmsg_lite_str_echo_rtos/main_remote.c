@@ -121,7 +121,7 @@ static void app_task(void *param)
         app_buf[len] = 0; /* End string by '\0' */
 
         byte_cnt += len;
-        if(byte_cnt > 0x100000)
+        if(byte_cnt > 104857600)
         {
             /* Get tx buffer from RPMsg */
             tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
