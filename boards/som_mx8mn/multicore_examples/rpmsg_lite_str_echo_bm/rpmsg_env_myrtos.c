@@ -172,7 +172,7 @@ int main(void)
         app_buf[len] = 0; /* End string by '\0' */
  
         byte_cnt += len;
-        if(byte_cnt > 0x100000)
+        if(byte_cnt > 0x10000000)
         {
         
             /* Get tx buffer from RPMsg */
