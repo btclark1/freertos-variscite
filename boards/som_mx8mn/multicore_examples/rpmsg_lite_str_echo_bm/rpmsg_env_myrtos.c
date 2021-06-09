@@ -172,9 +172,11 @@ int main(void)
         app_buf[len] = 0; /* End string by '\0' */
  
         byte_cnt += len;
-        if(byte_cnt >= 0x500000)
+        if(byte_cnt >= 20) /* 0x500000)*/
         {
         
+        PRINTF("Before rpmsg_lite_alloc_tx_buffer...BM.. look at RL_BLOCK \r\n");
+
             /* Get tx buffer from RPMsg */
             tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
             assert(tx_buf);
