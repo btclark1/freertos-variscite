@@ -157,6 +157,7 @@ int main(void)
         while (msg_count == 0)
         {}
      
+
         len = rx_msg[rx_idx].len;
         if(len > sizeof(app_buf))
         {
@@ -203,7 +204,7 @@ int main(void)
         if (result != 0)
         {
             PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . rx_idx = %d, result = %d\r\n", rx_idx, result);
-            assert(false);
+           // assert(false);
         }
         rx_idx = (rx_idx + 1) % STRING_BUFFER_CNT;
 
