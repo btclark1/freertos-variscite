@@ -122,7 +122,7 @@ static void app_task(void *param)
 
 //        byte_cnt += len;
 //        if(byte_cnt >= 20) /*0x500000)*/
-        {
+ //       {
  //                PRINTF("Before rpmsg_lite_alloc_tx_buffer...RTOS.. look at RL_BLOCK \r\n");
             /* Get tx buffer from RPMsg */
             tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
@@ -142,7 +142,7 @@ static void app_task(void *param)
  //               PRINTF("Get Message From Master Side...RTOS.. : [len : %d], size = %d, byte_cnt = %d\r\n",
  //                                                 len, size, byte_cnt);
  //           byte_cnt = 0;
-        }
+ //       }
         /* Release held RPMsg rx buffer */
         result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
         if (result != 0)
