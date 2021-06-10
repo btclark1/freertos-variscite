@@ -178,7 +178,7 @@ int main(void)
     //    PRINTF("Before rpmsg_lite_alloc_tx_buffer...BM.. look at RL_BLOCK \r\n");
 
             /* Get tx buffer from RPMsg */
-            tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_DONT_BLOCK);
+            tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
             assert(tx_buf);
         
              /* Copy string to RPMsg tx buffer */
