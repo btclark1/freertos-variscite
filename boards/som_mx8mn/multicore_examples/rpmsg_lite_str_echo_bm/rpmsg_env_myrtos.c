@@ -199,11 +199,11 @@ int main(void)
             }
 
             /* BTC Remove printfs so they are not included in throughput test */        
-     //       if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
-     //           PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
-     //       else
-     //           PRINTF("Get Message From Master Side...BM.. rx_msg[rx_idx].src = 0x%x  : [len : %d], size = %d, byte_cnt = %d\r\n",
-     //                                             rx_msg[rx_idx].src, len, size, byte_cnt);
+            if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
+                PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
+            else
+                PRINTF("Get Message From Master Side...BM.. rx_msg[rx_idx].src = 0x%x  : [len : %d], size = %d, byte_cnt = %d\r\n",
+                                                  rx_msg[rx_idx].src, len, size, byte_cnt);
     //        byte_cnt = 0;
 
     //    } 
