@@ -193,17 +193,17 @@ int main(void)
             }
 
             /* BTC Remove printfs so they are not included in throughput test */        
-            if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
-                PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
-            else
-                PRINTF("Get Message From Master Side...BM.. rx_msg[%d].src = 0x%x  : [len : %d], size = %d\r\n",
-                                                  rx_idx, rx_msg[rx_idx].src, len, size);
+    //          if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
+    //            PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
+    //        else
+    //            PRINTF("Get Message From Master Side...BM.. rx_msg[%d].src = 0x%x  : [len : %d], size = %d\r\n",
+    //                                              rx_idx, rx_msg[rx_idx].src, len, size);
     //        byte_cnt = 0;
     //    } 
         result =  rpmsg_lite_release_rx_buffer(my_rpmsg, rx_msg[rx_idx].data);
         if (result != 0)
         {
-            PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . rx_idx = %d, result = %d\r\n", rx_idx, result);
+           //  PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . rx_idx = %d, result = %d\r\n", rx_idx, result);
            // assert(false);
         }
         rx_idx = (rx_idx + 1) % STRING_BUFFER_CNT;
