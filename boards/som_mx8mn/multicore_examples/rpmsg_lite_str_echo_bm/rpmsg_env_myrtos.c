@@ -58,22 +58,15 @@ static void rpmsg_enable_rx_int(bool enable)
 {
     if (enable)
     {
-        /* no flow control
-        --msg_count;
-        */
         /* yes to flow control*/
         if ((--msg_count) == 0)
             env_enable_interrupt(my_rpmsg->rvq->vq_queue_index); 
     }
     else
     {
-        /* no flow control
-        msg_count++;
-        */
         /* yes to flow control */
         if ((msg_count++) == 0)
             env_disable_interrupt(my_rpmsg->rvq->vq_queue_index); 
-        
     }
     /* PRINTF("In rpmsg_enable_rx_int...BM.. msg_count = %d\r\n", msg_count);*/
 }
@@ -202,19 +195,17 @@ int main(void)
             if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
                 PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
             else
-                PRINTF("Get Message From Master Side...BM.. rx_msg[rx_idx].src = 0x%x  : [len : %d], size = %d\r\n",
-                                                  rx_msg[rx_idx].src, len, size);
+                PRINTF("Get Message From Master Side...BM.. rx_msg[%d].src = 0x%x  : [len : %d], size = %d\r\n",
+                                                  rx_idx, rx_msg[rx_idx].src, len, size);
     //        byte_cnt = 0;
-
     //    } 
         result =  rpmsg_lite_release_rx_buffer(my_rpmsg, rx_msg[rx_idx].data);
-        rx_idx = (rx_idx + 1) % STRING_BUFFER_CNT;
         if (result != 0)
         {
-            PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . result = %d\r\n", result);
+            PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . rx_idx = %d, result = %d\r\n", rx_idx, result);
             assert(false);
         }
-
+        rx_idx = (rx_idx + 1) % STRING_BUFFER_CNT;
 
         /* Once a message is consumed, minus the msg_count and might enable interrupt again */
         rpmsg_enable_rx_int(true);
