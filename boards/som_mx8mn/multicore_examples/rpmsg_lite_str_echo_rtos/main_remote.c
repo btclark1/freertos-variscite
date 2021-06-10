@@ -116,7 +116,15 @@ static void app_task(void *param)
         }
 
         /* Copy string from RPMsg rx buffer */
-        assert(len < sizeof(app_buf));
+        if(len > sizeof(app_buf))
+        {
+            PRINTF("len > sizeof(app_buf)...RTOS . len = %d\r\n", len);
+             /* Once a message is consumed, minus the msg_count and might enable interrupt again */
+            rpmsg_enable_rx_int(true);
+            continue;
+        }
+        //assert(len < sizeof(app_buf));
+
         memcpy(app_buf, rx_buf, len);
         app_buf[len] = 0; /* End string by '\0' */
 

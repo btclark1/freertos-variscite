@@ -39,7 +39,7 @@ typedef struct
 
 static app_message_t rx_msg[STRING_BUFFER_CNT]; /* Recieve message */
 /* static char app_buf[512]; */                      /* Each RPMSG buffer can carry less than 512 payload */
-static char app_buf[2049];                       /* Each RPMSG buffer can carry less than 512 payload */
+static char app_buf[2048];                       /* Each RPMSG buffer can carry less than 512 payload */
 
 static uint8_t handler_idx = 0;
 static volatile int32_t msg_count = 0;
@@ -114,7 +114,7 @@ int main(void)
 
     uint32_t debug = 0;
 
-    uint32_t byte_cnt = 0;
+   // uint32_t byte_cnt = 0;
 
     /* Initialize standard SDK demo application pins */
     /* M7 has its local cache and enabled by default,
@@ -165,7 +165,14 @@ int main(void)
         {}
      
         len = rx_msg[rx_idx].len;
-        assert(len < sizeof(app_buf));
+        if(len > sizeof(app_buf))
+        {
+            PRINTF("len > sizeof(app_buf)...BM . len = %d\r\n", len);
+             /* Once a message is consumed, minus the msg_count and might enable interrupt again */
+            rpmsg_enable_rx_int(true);
+            continue;
+        }
+        //assert(len < sizeof(app_buf));
         
         /* Copy string from RPMsg rx buffer */
         memcpy(app_buf, rx_msg[rx_idx].data, len);
