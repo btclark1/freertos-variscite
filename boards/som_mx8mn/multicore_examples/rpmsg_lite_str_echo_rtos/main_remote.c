@@ -120,7 +120,6 @@ static void app_task(void *param)
         {
             PRINTF("len > sizeof(app_buf)...RTOS . len = %d\r\n", len);
              /* Once a message is consumed, minus the msg_count and might enable interrupt again */
-            rpmsg_enable_rx_int(true);
             continue;
         }
         //assert(len < sizeof(app_buf));
