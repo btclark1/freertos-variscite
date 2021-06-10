@@ -58,8 +58,6 @@ static void app_task(void *param)
 
     uint32_t debug = 0;
 
-    uint32_t byte_cnt = 0;
-
     /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...RTOS - by BTC...\r\n");
 
@@ -146,8 +144,8 @@ static void app_task(void *param)
  //           if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
  //               PRINTF("Get New Line From Master Side...RTOS \r\n");
  //           else
- //               PRINTF("Get Message From Master Side...RTOS.. : [len : %d], size = %d, byte_cnt = %d\r\n",
- //                                                 len, size, byte_cnt);
+ //               PRINTF("Get Message From Master Side...RTOS.. : [len : %d], size = %d\r\n",
+ //                                                 len, size);
  //           byte_cnt = 0;
  //       }
         /* Release held RPMsg rx buffer */
