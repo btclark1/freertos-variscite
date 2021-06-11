@@ -109,7 +109,7 @@ static void app_task(void *param)
     {
         /* Get RPMsg rx buffer with message */
         result =
-            rpmsg_queue_recv_nocopy(my_rpmsg, my_queue, (uint32_t *)&remote_addr, (char **)&rx_buf, &len, RL_BLOCK);
+            rpmsg_queue_recv_nocopy(my_rpmsg, my_queue, (uint32_t *)&remote_addr, (char **)&rx_buf, &len, RL_DONT_BLOCK);
         if (result != 0)
         {
             assert(false);
@@ -132,7 +132,7 @@ static void app_task(void *param)
         {
  //                PRINTF("Before rpmsg_lite_alloc_tx_buffer...RTOS.. look at RL_BLOCK \r\n");
             /* Get tx buffer from RPMsg */
-            tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
+            tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_DONT_BLOCK);
             assert(tx_buf);
             /* Copy string to RPMsg tx buffer */
             memcpy(tx_buf, app_buf, len);
