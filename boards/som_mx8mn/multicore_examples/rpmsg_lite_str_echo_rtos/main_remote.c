@@ -58,6 +58,8 @@ static void app_task(void *param)
 
     uint32_t debug = 0;
 
+    uint32_t byte_cnt = 0;
+
     /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo FreeRTOS RTOS API Demo...RTOS - by BTC...\r\n");
 
@@ -125,9 +127,9 @@ static void app_task(void *param)
         memcpy(app_buf, rx_buf, len);
         app_buf[len] = 0; /* End string by '\0' */
 
-//        byte_cnt += len;
-//        if(byte_cnt >= 20) /*0x500000)*/
- //       {
+        byte_cnt += len;
+        if(byte_cnt >= 0x100000)
+        {
  //                PRINTF("Before rpmsg_lite_alloc_tx_buffer...RTOS.. look at RL_BLOCK \r\n");
             /* Get tx buffer from RPMsg */
             tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
@@ -141,13 +143,13 @@ static void app_task(void *param)
                 assert(false);
             }
             /* BTC Remove printfs so they are not included in throughput test */        
- //           if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
- //               PRINTF("Get New Line From Master Side...RTOS \r\n");
- //           else
- //               PRINTF("Get Message From Master Side...RTOS.. : [len : %d], size = %d\r\n",
- //                                                 len, size);
- //           byte_cnt = 0;
- //       }
+            if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
+                PRINTF("Get New Line From Master Side...RTOS \r\n");
+            else
+                PRINTF("Get Message From Master Side...RTOS.. : [len : %d], size = %d\r\n",
+                                                  len, size);
+            byte_cnt = 0;
+        }
         /* Release held RPMsg rx buffer */
         result = rpmsg_queue_nocopy_free(my_rpmsg, rx_buf);
         if (result != 0)
