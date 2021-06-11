@@ -114,6 +114,10 @@ static void app_task(void *param)
         {
             assert(false);
         }
+
+        PRINTF("rpmsg_queue_recv_nocopy..RTOS.. : [len : %d], size = %d\r\n",
+                                                    len, size);
+
         /* len can be 0 ???   Not sure why */
         if(len > 0 && len < sizeof(app_buf))
         {
