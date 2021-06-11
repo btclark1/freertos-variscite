@@ -135,7 +135,7 @@ SET(CMAKE_C_FLAGS_RELEASE " \
     -DSDK_DELAY_USE_DWT \
     -DFSL_RTOS_FREE_RTOS \
     -DSERIAL_PORT_TYPE_UART=1 \
-    -O3 \
+    -O2 \
     -mcpu=cortex-m7 \
     -Wall \
     -Wno-address-of-packed-member \
@@ -180,7 +180,7 @@ SET(CMAKE_C_FLAGS_DDR_RELEASE " \
     -DSDK_DELAY_USE_DWT \
     -DFSL_RTOS_FREE_RTOS \
     -DSERIAL_PORT_TYPE_UART=1 \
-    -O3 \
+    -O2 \
     -mcpu=cortex-m7 \
     -Wall \
     -Wno-address-of-packed-member \
@@ -227,7 +227,7 @@ SET(CMAKE_C_FLAGS_FLASH_RELEASE " \
     -DSDK_DELAY_USE_DWT \
     -DFSL_RTOS_FREE_RTOS \
     -DSERIAL_PORT_TYPE_UART=1 \
-    -O3 \
+    -O2 \
     -mcpu=cortex-m7 \
     -Wall \
     -Wno-address-of-packed-member \
@@ -271,7 +271,7 @@ SET(CMAKE_CXX_FLAGS_RELEASE " \
     -DNDEBUG \
     -DCPU_MIMX8MN6DVTJZ \
     -DSERIAL_PORT_TYPE_UART=1 \
-    -O3 \
+    -O2 \
     -mcpu=cortex-m7 \
     -Wall \
     -Wno-address-of-packed-member \
@@ -314,7 +314,7 @@ SET(CMAKE_CXX_FLAGS_DDR_DEBUG " \
 SET(CMAKE_CXX_FLAGS_DDR_RELEASE " \
     -DCPU_MIMX8MN6DVTJZ \
     -DSERIAL_PORT_TYPE_UART=1 \
-    -O3 \
+    -O2 \
     -mcpu=cortex-m7 \
     -Wall \
     -Wno-address-of-packed-member \
@@ -357,7 +357,7 @@ SET(CMAKE_CXX_FLAGS_FLASH_DEBUG " \
 SET(CMAKE_CXX_FLAGS_FLASH_RELEASE " \
     -DCPU_MIMX8MN6DVTJZ \
     -DSERIAL_PORT_TYPE_UART=1 \
-    -O3 \
+    -O2 \
     -mcpu=cortex-m7 \
     -Wall \
     -Wno-address-of-packed-member \

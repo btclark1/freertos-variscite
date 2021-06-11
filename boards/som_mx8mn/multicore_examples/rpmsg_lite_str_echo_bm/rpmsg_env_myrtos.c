@@ -39,7 +39,7 @@ typedef struct
 
 static app_message_t rx_msg[STRING_BUFFER_CNT]; /* Recieve message */
 /* static char app_buf[512]; */                      /* Each RPMSG buffer can carry less than 512 payload */
-static char app_buf[2048];                       /* Each RPMSG buffer can carry less than 512 payload */
+static char app_buf[2049];                       /* Each RPMSG buffer can carry less than 512 payload */
 
 static uint8_t handler_idx = 0;
 static volatile int32_t msg_count = 0;
@@ -159,52 +159,47 @@ int main(void)
      
 
         len = rx_msg[rx_idx].len;
-        if(len > sizeof(app_buf))
+        if(len > 0 && len < sizeof(app_buf))
         {
-            PRINTF("len > sizeof(app_buf)...BM . len = %d\r\n", len);
-             /* Once a message is consumed, minus the msg_count and might enable interrupt again */
-            rpmsg_enable_rx_int(true);
-            continue;
-        }
-        //assert(len < sizeof(app_buf));
-        
-        /* Copy string from RPMsg rx buffer */
-        memcpy(app_buf, rx_msg[rx_idx].data, len);
-        app_buf[len] = 0; /* End string by '\0' */
- 
-    //    byte_cnt += len;
-    //    if(byte_cnt >= 20) /* 0x500000)*/
-    //    {
-        
-    //    PRINTF("Before rpmsg_lite_alloc_tx_buffer...BM.. look at RL_BLOCK \r\n");
 
-            /* Get tx buffer from RPMsg */
-            tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
-            assert(tx_buf);
-        
-             /* Copy string to RPMsg tx buffer */
-            memcpy(tx_buf, app_buf, len);
-            /* Echo back received message with nocopy send */
-            result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, tx_buf, len);
+            /* Copy string from RPMsg rx buffer */
+            memcpy(app_buf, rx_msg[rx_idx].data, len);
+            app_buf[len] = 0; /* End string by '\0' */
+    
+            byte_cnt += len;
+            if(byte_cnt >=  0x100000)
+            {
+            
+        //    PRINTF("Before rpmsg_lite_alloc_tx_buffer...BM.. look at RL_BLOCK \r\n");
+
+                /* Get tx buffer from RPMsg */
+                tx_buf = rpmsg_lite_alloc_tx_buffer(my_rpmsg, &size, RL_BLOCK);
+                assert(tx_buf);
+            
+                /* Copy string to RPMsg tx buffer */
+                memcpy(tx_buf, app_buf, len);
+                /* Echo back received message with nocopy send */
+                result = rpmsg_lite_send_nocopy(my_rpmsg, my_ept, rx_msg[rx_idx].src, tx_buf, len);
+                if (result != 0)
+                {
+                    PRINTF("Failed rpmsg_lite_send_nocopy...BM . result = %d\r\n", result);
+                    assert(false);
+                }
+
+                /* BTC Remove printfs so they are not included in throughput test */        
+                if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
+                    PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
+                else
+                    PRINTF("Get Message From Master Side...BM.. rx_msg[%d].src = 0x%x  : [len : %d], size = %d\r\n",
+                                                      rx_idx, rx_msg[rx_idx].src, len, size);
+                byte_cnt = 0;
+            } 
+            result =  rpmsg_lite_release_rx_buffer(my_rpmsg, rx_msg[rx_idx].data);
             if (result != 0)
             {
-                PRINTF("Failed rpmsg_lite_send_nocopy...BM . result = %d\r\n", result);
-                assert(false);
+              PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . rx_idx = %d, result = %d\r\n", rx_idx, result);
+              assert(false);
             }
-
-            /* BTC Remove printfs so they are not included in throughput test */        
-    //          if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
-    //            PRINTF("Get New Line From Master Side...BM \r\n", rx_msg[rx_idx].src);
-    //        else
-    //            PRINTF("Get Message From Master Side...BM.. rx_msg[%d].src = 0x%x  : [len : %d], size = %d\r\n",
-    //                                              rx_idx, rx_msg[rx_idx].src, len, size);
-    //        byte_cnt = 0;
-    //    } 
-        result =  rpmsg_lite_release_rx_buffer(my_rpmsg, rx_msg[rx_idx].data);
-        if (result != 0)
-        {
-           //  PRINTF("Failed rpmsg_lite_release_rx_buffer...BM . rx_idx = %d, result = %d\r\n", rx_idx, result);
-           // assert(false);
         }
         rx_idx = (rx_idx + 1) % STRING_BUFFER_CNT;
 
