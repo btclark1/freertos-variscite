@@ -107,7 +107,7 @@ int main(void)
 
     uint32_t debug = 0;
 
-   // uint32_t byte_cnt = 0;
+    uint32_t byte_cnt = 0;
 
     /* Initialize standard SDK demo application pins */
     /* M7 has its local cache and enabled by default,
