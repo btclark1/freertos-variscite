@@ -81,8 +81,6 @@ static void app_task(void *param)
     struct rpmsg_lite_instance *volatile my_rpmsg;
     volatile rpmsg_ns_handle ns_handle;
 
-    uint32_t debug;
-
     /* Print the initial banner */
     (void)PRINTF("\r\nRPMSG Ping-Pong FreeRTOS RTOS API Demo...\r\n");
 
@@ -102,14 +100,7 @@ static void app_task(void *param)
     (void)MCMGR_TriggerEvent(kMCMGR_RemoteApplicationEvent, APP_RPMSG_READY_EVENT_DATA);
 #else
     (void)PRINTF("RPMSG Share Base Addr is 0x%x\r\n", RPMSG_LITE_SHMEM_BASE);
-    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
-                                         RPMSG_LITE_LINK_ID,
-                                         RL_NO_FLAGS,
-                                         &debug);
-   PRINTF("After PingPong rpmsg_lite_remote_init, *my_rpmsg->sh_mem_base = 0x%x, debug = 0x%x\r\n",
-                                                     my_rpmsg->sh_mem_base,
-                                                     debug);
-
+    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
 #endif /* MCMGR_USED */
     while (0 == rpmsg_lite_is_link_up(my_rpmsg))
     {
