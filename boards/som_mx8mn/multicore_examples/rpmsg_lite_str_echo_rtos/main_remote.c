@@ -119,8 +119,8 @@ static void app_task(void *param)
             assert(false);
         }
 
-        PRINTF("rpmsg_queue_recv_nocopy..RTOS.. : [len : %d], size = %d\r\n",
-                                                    len, size);
+    //    PRINTF("rpmsg_queue_recv_nocopy..RTOS.. : [len : %d], size = %d\r\n",
+    //                                                len, size);
         //assert(len < sizeof(app_buf));
         memcpy(app_buf, rx_buf, len);
         app_buf[len] = 0; /* End string by '\0' */
@@ -149,7 +149,7 @@ static void app_task(void *param)
                 if ((len == 2) && (app_buf[0] == 0xd) && (app_buf[1] == 0xa))
                     PRINTF("Get New Line From Master Side...RTOS \r\n");
                 else
-                    PRINTF("Get Message From Master Side...RTOS.. : [len : %d], size = %d\r\n",
+                    PRINTF("Message From Master..RTOS : len  %d, size = %d\r\n",
                                                     len, size);
                 byte_cnt = 0;
             }
