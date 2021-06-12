@@ -125,10 +125,14 @@ int main(void)
 
    /* Print the initial banner */
     PRINTF("\r\nRPMSG String Echo .... API Demo...BM - NOT MCMGR_USED- by BTC...\r\n");
-    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
+/*    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
                                          RPMSG_LITE_LINK_ID,
                                          RL_NO_FLAGS,
                                          &debug);
+*/
+    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
+                                         RPMSG_LITE_LINK_ID,
+                                         RL_NO_FLAGS);
 
     PRINTF("After rpmsg_lite_remote_init, ...BM ,  *my_rpmsg->sh_mem_base = 0x%x, debug = 0x%x\r\n",
                                                      my_rpmsg->sh_mem_base, debug);   

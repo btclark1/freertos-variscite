@@ -64,7 +64,7 @@
 #ifndef RL_BUFFER_PAYLOAD_SIZE
 /* BTC - Orig #define RL_BUFFER_PAYLOAD_SIZE (496U)
                          32768 - 16 = 32752 **/
-#define RL_BUFFER_PAYLOAD_SIZE (32752U)
+#define RL_BUFFER_PAYLOAD_SIZE (4080U)
 #endif
 
 //! @def RL_BUFFER_COUNT

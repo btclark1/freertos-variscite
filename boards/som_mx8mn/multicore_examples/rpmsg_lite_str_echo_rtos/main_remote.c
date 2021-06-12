@@ -76,10 +76,14 @@ static void app_task(void *param)
     /* Signal the other core we are ready */
     (void)MCMGR_SignalReady(kMCMGR_Core1);
 #else
-    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
+/*    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
                                              RPMSG_LITE_LINK_ID,
                                              RL_NO_FLAGS,
                                              &debug);
+*/
+    my_rpmsg = rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE,
+                                             RPMSG_LITE_LINK_ID,
+                                             RL_NO_FLAGS);
 
     PRINTF("After rpmsg_lite_remote_init, NOT MCMGR_USED...RTOS, *my_rpmsg->sh_mem_base = 0x%x, debug = 0x%x\r\n",
                                                      my_rpmsg->sh_mem_base,
@@ -117,13 +121,14 @@ static void app_task(void *param)
 
         PRINTF("rpmsg_queue_recv_nocopy..RTOS.. : [len : %d], size = %d\r\n",
                                                     len, size);
+        //assert(len < sizeof(app_buf));
+        memcpy(app_buf, rx_buf, len);
+        app_buf[len] = 0; /* End string by '\0' */
 
         /* len can be 0 ???   Not sure why */
         if(len > 0 && len < sizeof(app_buf))
         {
-            //assert(len < sizeof(app_buf));
-            memcpy(app_buf, rx_buf, len);
-            app_buf[len] = 0; /* End string by '\0' */
+   
 
             byte_cnt += len;
             if(byte_cnt >= 0x100000)

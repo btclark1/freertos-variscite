@@ -31,14 +31,16 @@
 //! Size of the buffer payload, it must be equal to (240, 496, 1008, ...)
 //! [2^n - 16].
 //! The default value is 496U.
-#define RL_BUFFER_PAYLOAD_SIZE (16368U)
+// BTC This is the Tx and Rx buffer sizes combined.
+//   the largest I could get them to accept is 4K, even when set much larger.
+//   VRing location and size need adjusting  to go larger
+#define RL_BUFFER_PAYLOAD_SIZE (4080U)
 
 //! @def RL_BUFFER_COUNT
 //!
 //! Number of the buffers, it must be power of two (2, 4, ...).
 //! The default value is 2U.
-// BTC Orig #define RL_BUFFER_COUNT (256U)
-#define RL_BUFFER_COUNT (16U)
+#define RL_BUFFER_COUNT (256U)
 
 //! @def RL_API_HAS_ZEROCOPY
 //!

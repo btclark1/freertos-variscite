@@ -203,10 +203,13 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
                                                    uint32_t init_flags,
                                                    void *env_cfg);
 #else
+struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t link_id, uint32_t init_flags);
+/* BTC added to return trace 
 struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
                                                    uint32_t link_id,
                                                    uint32_t init_flags,
                                                    uint32_t *debug);
+*/
 #endif
 
 /*!

@@ -33,8 +33,6 @@
 #include "rpmsg_lite.h"
 #include "rpmsg_platform.h"
 
-#include <stdio.h>
-
 /* rpmsg_std_hdr contains a reserved field,
  * this implementation of RPMSG uses this reserved
  * field to hold the idx and totlen of the buffer
@@ -1085,12 +1083,11 @@ struct rpmsg_lite_instance *rpmsg_lite_master_init(void *shmem_addr,
      */
     virtqueue_kick(rpmsg_lite_dev->rvq);
 
-printf("\n\n\n  **************** In rpmsg_lite_master_init...BM \r\n\n");
-
     return rpmsg_lite_dev;
 }
 
 #define BTC
+#undef BTC
 
 #if defined(RL_USE_STATIC_API) && (RL_USE_STATIC_API == 1)
 struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
@@ -1105,11 +1102,16 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
                                                    void *env_cfg)
 bbbbbb
 #else
+
+#if defined(BTC) 
 struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, 
                                                     uint32_t link_id, 
                                                     uint32_t init_flags,
                                                     uint32_t *debug)
+#else
+struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr, uint32_t link_id, uint32_t init_flags)
 
+#endif
 #endif
 {
     int32_t status;
@@ -1234,7 +1236,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
 #endif
         return RL_NULL;
     }
-
+#if defined(BTC)  
     /* BTC - Check rpmsg_lite_dev->link_state to see if Master already set to 1 */
     if(rpmsg_lite_dev->link_state == 0)
     {
@@ -1244,7 +1246,7 @@ struct rpmsg_lite_instance *rpmsg_lite_remote_init(void *shmem_addr,
     {
         *debug |= 256;
     }
-
+#endif
 
     // FIXME - a better way to handle this , tx for master is rx for remote and vice versa.
     rpmsg_lite_dev->tvq = vqs[0];
