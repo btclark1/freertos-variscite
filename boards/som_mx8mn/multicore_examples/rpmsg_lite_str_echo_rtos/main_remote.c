@@ -131,7 +131,7 @@ static void app_task(void *param)
    
 
             byte_cnt += len;
-            if(byte_cnt >= 40960)
+            if(byte_cnt >= 100000)
             {
     //                PRINTF("Before rpmsg_lite_alloc_tx_buffer...RTOS.. look at RL_BLOCK \r\n");
                 /* Get tx buffer from RPMsg */
